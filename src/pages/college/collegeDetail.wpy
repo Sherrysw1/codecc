@@ -1,0 +1,759 @@
+<template>
+    <view class="main">
+        <i-spin  wx:if="{{loading}}" size="large" fix></i-spin>
+        <view wx:else>
+            <view class="header">
+                <image class="header-img" src="../../resource/img/college_back_new.png"/>
+            </view>
+            <view class="body-box">
+                <view class="intro">
+                    <image class="intro-badge" src="{{collegeInfoDetail.schoollogo}}"/>
+                    <view class="intro-detail">
+                        <view class="intro-title">{{collegeInfoDetail.schoolname}}</view>
+                        <view class="intro-tag">
+                            <view wx:if="{{collegeInfoDetail.f985}}" class="intro-tag-each">985</view>
+                            <view wx:if="{{collegeInfoDetail.f211}}" class="intro-tag-each">211</view>
+                            <view wx:if="{{collegeInfoDetail.firstclassattr}}" class="intro-tag-each">{{collegeInfoDetail.firstclassattr}}</view>
+                        </view>
+                    </view>
+                </view>
+            </view>
+            <tab title="tab"></tab>
+            <view class="tab-detail" wx:if="{{current === 'tab1' }}">
+                <view style="margin: 20rpx auto 0;">
+                    <buttonA>
+                        <view>点击测试考上该大学的概率</view>
+                    </buttonA>
+                </view>
+                <view>
+                    <view class="title">
+                        <view class="title-border"></view>
+                        <view class="title-text">学校信息</view>
+                    </view>
+                    <view class="intro-main">
+                        <view class="intro-main-item" style="width:156rpx">
+                            <view class="intro-main-title" > 地区</view>
+                            <view class="intro-main-subtitle">{{collegeInfoDetail.schoollocation}}</view>
+                        </view>
+                        <view class="intro-main-border" ></view>
+                        <view class="intro-main-item" style="width:186rpx">
+                            <view class="intro-main-title" style="margin-left:30rpx"> 属性</view>
+                            <view class="intro-main-subtitle" style="margin-left:30rpx">{{collegeInfoDetail.schoollevel}}</view>
+                        </view>
+                        <view class="intro-main-border" ></view>
+                        <view class="intro-main-item" style="width:186rpx">
+                            <view class="intro-main-title" style="margin-left:30rpx"> 类型 </view>
+                            <view class="intro-main-subtitle" style="margin-left:30rpx">{{collegeInfoDetail.schooltype}}</view>
+                        </view>
+                        <view class="intro-main-border"></view>
+                        <view class="intro-main-item">
+                            <view class="intro-main-title" style="margin-left:30rpx"> 研究生点</view>
+                            <view class="intro-main-subtitle" style="margin-left:30rpx">{{collegeInfoDetail.masternum}}</view>
+                        </view>
+                    </view>
+                    <view class="location">
+                        <image class="location-img" src="../../resource/img/college_location.png"/>
+                        <view class="location-text">{{collegeInfoDetail.schoollocation}}</view>
+                    </view>
+                    <view class="introduction" style="height:{{introSignal ? 'auto' : '265rpx'}}">
+                        <text>{{collegeInfoDetail.schoolintro}}</text>
+                        <view wx:if="{{!introSignal && !lengthSignal}}" class="introduction-shadow"></view>
+                    </view>
+                    <view wx:if="{{!lengthSignal}}" class="introduction-button" @tap="moreInfo">{{introSignal ? '收起学校信息' : '展开全部学校信息'}}</view>
+                    <van-collapse value="{{ detailActiveName }}" bind:change="detailChange" accordion>
+                        <view class="fold-box">
+                            <van-collapse-item name="-2" class="fold-item">
+                                <view slot="title" style="display:flex">
+                                    <view class="fold-switch"></view>
+                                    <text class="fold-text">男女比例</text>
+                                </view>
+                                <view class="fold-content">
+                                    <view class="ratio">
+                                        <image style="width: 39rpx; height: 44rpx;" src="../../resource/img/boy.png"/>
+                                        <view class="ratio-box">
+                                            <view class="ratio-boy" style="width: {{boyRatio}}rpx"></view>
+                                            <view class="ratio-girl" style="width: {{girlRatio}}rpx"></view>
+                                        </view>
+                                        <image style="width: 41rpx; height: 43rpx;" src="../../resource/img/girl.png"/>
+                                    </view>
+                                    <view class="ratio-text">
+                                        <text>{{boyPersent}}:{{girlPersent}}</text>
+                                    </view>
+                                </view>
+                            </van-collapse-item>
+                        </view>
+                        <view class="fold-box">
+                            <van-collapse-item name="-1" class="fold-item">
+                                <view slot="title" style="display:flex">
+                                    <view class="fold-switch"></view>
+                                    <text class="fold-text">知名校友</text>
+                                </view>
+                                <view class="fold-content">
+                                    <view style="background: #f7f8f9;">
+                                        <view class="mates">
+                                            <view class="mates-item" wx:for="{{schoolMates}}" wx:for-item='item' wx:key="schoolIndex" >
+                                                <view class="mates-item-name">{{item}}</view>
+                                                <view class="mates-item-intro">名人介绍</view>
+                                            </view>
+                                        </view>
+                                    </view>
+                                </view>
+                            </van-collapse-item>
+                        </view>
+                        <view wx:for="{{multiList}}" wx:for-item="item" wx:for-index="index" wx:key="idx" class="fold-box">
+                            <van-collapse-item name="{{index}}" class="fold-item">
+                                <view slot="title" style="display:flex">
+                                    <view class="fold-switch"></view>
+                                    <text class="fold-text">{{item.title}}</text>
+                                </view>
+                                <view class="fold-content">
+                                    <text>{{item.content}}</text>
+                                </view>
+                            </van-collapse-item>
+                        </view>
+                    </van-collapse>
+                </view>
+            </view>
+            <view class="tab-detail" wx:if="{{current == 'tab2' }}">
+                <!-- <view class="tab2-title">
+                    <image class="tab2-title-img" src="../../resource/img/college_icon.png"/>
+                    <view class="tab2-title-word">历年分数线</view>
+                    <picker class="tab2-title-word2" range="{{subjectList}}" value="{{subjectIndex}}" bindchange="subjectChange">{{subjectSelect}} 
+                    <image class="tab2-title-down" src="../../resource/img/collegeMain_down.png"/>
+                    </picker>
+                </view> -->
+                <view class="tab2-table-title">
+                    <view style="width:110rpx;height:88rpx;border-right:2rpx solid #edecec">年份</view>
+                    <view style="width:100rpx;height:88rpx;border-right:2rpx solid #edecec;padding-top:15rpx;">
+                    <view style="line-height:30rpx">招生</view>
+                    <view style="line-height:30rpx">批次</view>
+                    </view>
+                    <view style="width:105rpx;height:88rpx;border-right:2rpx solid #edecec">最高分</view>
+                    <view style="width:105rpx;height:88rpx;border-right:2rpx solid #edecec">最低分</view>
+                    <view style="width:105rpx;height:88rpx;border-right:2rpx solid #edecec">平均分</view>
+                    <view style="width:105rpx;height:88rpx;border-right:2rpx solid #edecec">录取数</view>
+                    <view style="width:107rpx;height:88rpx;padding-top:15rpx;">
+                    <view style="line-height:30rpx">最低</view>
+                    <view style="line-height:30rpx">位次</view>
+                    </view>
+                </view>
+                <view class="tab2-table-body">
+                    <view class="tab-table-line" wx:for="{{enrollList}}" wx:for-item="item" wx:key="index">
+                        <view style="width:110rpx;height:88rpx;border-right:2rpx solid #edecec">{{item.year}}</view>
+                        <view style="width:100rpx;height:88rpx;border-right:2rpx solid #edecec;padding-top:15rpx;">
+                            <view style="line-height:30rpx">{{item.batch[0]}}{{item.batch[1]}}</view>
+                            <view style="line-height:30rpx">{{item.batch[2]}}{{item.batch[3]}}{{item.batch[4]}}</view>
+                        </view>
+                        <view style="width:105rpx;height:88rpx;border-right:2rpx solid #edecec">{{item.maxScore === -1 ? '--' : item.maxScore }}</view>
+                        <view style="width:105rpx;height:88rpx;border-right:2rpx solid #edecec">{{item.minScore === -1 ? '--' : item.minScore }}</view>
+                        <view style="width:105rpx;height:88rpx;border-right:2rpx solid #edecec">{{item.avgScore === -1 ? '--' : item.avgScore }}</view>
+                        <view style="width:105rpx;height:88rpx;border-right:2rpx solid #edecec">{{item.admitNum === -1 ? '--' : item.admitNum }}</view>
+                        <view style="width:107rpx;height:88rpx;">空</view>
+                    </view>
+                </view>
+            </view>
+            <view class="tab-detail" wx:if="{{current == 'tab3' }}">
+                <collegeSearch></collegeSearch>
+            </view>
+            <i-toast id="toast" />
+        </view>
+    </view>
+</template>
+<script>
+const { $Toast } = require('../../iview/base/index');
+import wepy from 'wepy';
+import common from '../../mixins/common';
+import tab from '../../components/tab';
+import collegeSearch from '../../components/college/collegesearchmajor';
+import buttonA from '../../components/common/buttonA';
+export default class collegeDetail extends wepy.page {
+    config = {
+        navigationBarTitleText: 'test',
+        usingComponents: {
+            'i-toast': '../../iview/toast/index',
+            'i-spin': '../../iview/spin/index',
+            'van-collapse': '../../vant-weapp/collapse/index',
+            'van-collapse-item': '../../vant-weapp/collapse-item/index'
+        }
+    }
+    components = {
+        tab: tab,
+        collegeSearch: collegeSearch,
+        buttonA: buttonA
+    }
+    mixins = [
+        common
+    ]
+    data = {
+        loading: true,
+        current: 'tab1',
+        schoolId: 0,
+        requestUrl: null,
+        globalData: null,
+        collegeInfoDetail: null,
+        schoolName: '',
+        enrollList: '',
+        subjectSelect: '理科',
+        subjectList: ['理科', '文科'],
+        subjectIndex: 0,
+        introSignal: false,
+        schoolMates: [],
+        studentType: '',
+        lengthSignal: false,
+        detailActiveName: '-2',
+        multiList: [],
+        boyRatio: 250,
+        girlRatio: 250,
+        boyPersent: 0,
+        girlPersent: 0
+    }
+    computed = {}
+    watch = {
+    }
+    methods = {
+        async subjectChange (e) {
+            let self = this;
+            self.subjectSelect = self.subjectList[e.detail.value];
+            const resSub = await this.request({
+                url: self.requestUrl + '/gkzywx/collegeEnroll/getCollegeEnrollList.do',
+                method: 'POST',
+                header: {
+                    'content-type': 'application/json',
+                    'cookie': 'JSESSIONID=' + this.$parent.globalData.sessionId
+                },
+                data: {
+                    'schoolName': self.schoolName,
+                    'studentProvince': self.globalData.userInfoFromServer.studentProvince,
+                    'studentType': self.subjectSelect
+                }
+            }, false).catch(err => {
+                console.log(err);
+            });
+            if (resSub.status === 0) {
+                self.enrollList = resSub.data;
+                self.$apply();
+            }
+            else {
+                $Toast({
+                    content: resSub.msg,
+                    type: 'error'
+                });
+            }
+            self.$apply();
+        },
+        async moreInfo () {
+            this.introSignal = !this.introSignal;
+        },
+        async detailChange (e) {
+            this.detailActiveName = e.detail;
+        }
+    }
+    events = {
+        'changeTab': (param) => {
+            this.current = param;
+        }
+    }
+    async onLoad(param) {
+        var self = this;
+        self.requestUrl = this.$parent.globalData.requestUrl;
+        self.globalData = this.$parent.globalData;
+        self.schoolId = param.schoolId;
+        self.schoolName = param.schoolName;
+        self.studentType = this.$parent.dataFromServer.studentType;
+        wepy.setNavigationBarTitle({
+            title: `${param.schoolName}详情`
+        });
+        self.current = 'tab1';
+        self.lastPage = await this.getLastPage();
+        this.requestCollege();
+        this.requestEnroll();
+        this.$broadcast('changeTab', 'tab1');
+        setTimeout(() => {
+            self.loading = false;
+            self.$apply();
+        }, 500);
+        console.log(this.getDiviser(60, 40));
+        self.$apply();
+    }
+    onUnload() {
+        let self = this;
+        self.loading = true;
+        self.$apply();
+        if (self.lastPage.indexOf('Search') > -1) {
+            wepy.navigateBack({
+                delta: 1
+            });
+        }
+    }
+    async requestCollege () {
+        let self = this;
+        const resDetail = await this.request({
+            url: self.requestUrl + '/gkzywx/collegeInfo/getCollegeIntroDetailById.do',
+            method: 'POST',
+            header: {
+                'content-type': 'application/json',
+                'cookie': 'JSESSIONID=' + this.$parent.globalData.sessionId
+            },
+            data: {
+                schoolId: self.schoolId
+            }
+        }, false).catch(err => {
+            console.log(err);
+        });
+        if (resDetail.status === 0) {
+            self.collegeInfoDetail = resDetail.data;
+            self.collegeInfoDetail.schoollogo = 'https://gkzy-1258109256.cos.ap-beijing.myqcloud.com/school-logo/' + self.collegeInfoDetail.schoollogo;
+            self.schoolMates = self.collegeInfoDetail.schoolmates.split(/[、，]/);
+            self.collegeInfoDetail.schoolintro.length > 130 ? self.lengthSignal = false : self.lengthSignal = true;
+            let multiIntro = self.collegeInfoDetail.multiIntro;
+            self.multiList = JSON.parse(multiIntro);
+            self.boyRatio = parseInt(self.collegeInfoDetail.boypercent.replace(/[^0-9]/ig, '')) / 100 * 500;
+            self.girlRatio = 500 - self.boyRatio;
+            let diviser = await this.getDiviser(self.boyRatio, self.girlRatio);
+            self.boyPersent = self.boyRatio / diviser;
+            self.girlPersent = self.girlRatio / diviser;
+            self.$apply();
+        }
+        else {
+            $Toast({
+                content: resDetail.msg,
+                type: 'error'
+            });
+        }
+    }
+    async requestEnroll () {
+        let self = this;
+        const resEnroll = await this.request({
+            url: self.requestUrl + '/gkzywx/collegeEnroll/getCollegeEnrollList.do',
+            method: 'POST',
+            header: {
+                'content-type': 'application/json',
+                'cookie': 'JSESSIONID=' + this.$parent.globalData.sessionId
+            },
+            data: {
+                'schoolName': self.schoolName,
+                'studentProvince': self.globalData.userInfoFromServer.studentProvince,
+                'studentType': self.studentType
+            }
+        }, false).catch(err => {
+            console.log(err);
+        });
+        if (resEnroll.status === 0) {
+            self.enrollList = resEnroll.data;
+            self.$apply();
+        }
+        else {
+            $Toast({
+                content: resEnroll.msg,
+                type: 'error'
+            });
+        }
+    }
+    async getLastPage() {
+        let pages = getCurrentPages();
+        let lastPage = pages[pages.length - 2].route;
+        return `/${lastPage}`;
+    }
+    async getDiviser (n, m) {
+        let min = n;
+        (m < n) && (min = m);
+        let max = 0;
+        let arr = [];
+        for (let i = 0; i <= min; i++) {
+            if (n % i === 0 && m % i === 0) {
+                arr.push(i);
+            }
+        }
+        for (let i = 0; i < arr.length; i++) {
+            if (arr[i] > arr[i + 1]) {
+                arr[i] = [arr[i + 1], arr[i + 1] = arr[i]][0];
+            }
+        }
+        max = arr[arr.length - 1];
+        return max;
+    }
+  }
+</script>
+<style lang="less" scoped>
+.main {
+    border-top:1rpx solid rgb(224, 224, 224);
+    width:100%;
+}
+.intro-box{
+    width:100%;
+    height:215rpx;
+    border-bottom:1rpx solid rgb(224, 224, 224);
+    display:flex;
+}
+.intro-left {
+    width:122rpx;
+    height:123rpx;
+    margin-top:46rpx;
+    margin-left:30rpx;
+}
+.intro-right {
+    height:214rpx;
+}
+.intro-firstLine {
+    margin-left:36rpx;
+    height:36rpx;
+    font-size:35rpx;
+    color:#333333;
+    letter-spacing: 1rpx;
+    margin-top:40rpx;
+}
+.intro-secondLine {
+    margin-left:36rpx;
+    height:30rpx;
+    margin-top:24rpx;
+    display:flex;
+    font-size:26rpx;
+    line-height:30rpx;
+}
+.intro-secondLine-img {
+    width:23rpx;
+    height:29rpx;
+}
+.intro-secondLine-title {
+    margin-left:12rpx;
+    font-size:24rpx;
+    color:rgb(102,102,102);
+}
+.intro-thirdLine {
+  margin-left:26rpx;
+  height:60rpx;
+  margin-top:24rpx;
+  display:flex;
+}
+.intro-main {
+  display:flex;
+  margin: 40rpx auto 0;
+  height:80rpx;
+  width:690rpx;
+}
+.intro-main-item {
+  height:80rpx;
+  width:172rpx;
+}
+.intro-main-border {
+  height:70rpx;
+  width:1rpx;
+  margin-top:5px;
+  background:#cccccc
+}
+.intro-main-title {
+  font-size:26rpx;
+  color:#a9a9a9;
+  text-align: left;
+}
+.intro-main-subtitle {
+    font-size:32rpx;
+    color:#333333;
+    margin-top:14rpx;
+    text-align: left;
+}
+.tab-header {
+  width:100%;
+  height:90rpx;
+}
+.tab1-title {
+  width:100%;
+  height:30rpx;
+  margin-top:28rpx;
+  display:flex;
+}
+.tab1-title-img {
+  width:25rpx;
+  height:24rpx;
+  margin-left:28rpx;
+  margin-top:3rpx;
+}
+.tab1-title-word {
+    font-size:30rpx;
+    color:rgb(51,51,51);
+    margin-left:14rpx;
+    line-height:30rpx;
+}
+.tab1-text {
+    width:634rpx;
+    font-size:26rpx;
+    line-height:40rpx;
+    color:rgb(79,79,79);
+    margin:19rpx auto 19rpx;
+}
+// tab2
+.tab2-title {
+    width:100%;
+    height:30rpx;
+    margin-top:28rpx;
+    display:flex;
+    margin-bottom:31rpx
+}
+.tab2-title-img {
+    width:25rpx;
+    height:24rpx;
+    margin-left:28rpx;
+    margin-top:3rpx;
+}
+.tab2-title-word {
+    font-size:30rpx;
+    color:rgb(51,51,51);
+    margin-left:14rpx;
+    line-height:30rpx;
+}
+.tab2-title-word2 {
+    height:30rpx;
+    font-size:18rpx;
+    color:rgb(51,51,51);
+    margin-left:400rpx;
+    line-height:30rpx;
+    display: flex;
+}
+.tab2-title-down {
+    width:19rpx;
+    height:10rpx;
+    margin-top:5.5rpx;
+    margin-left:30rpx;
+}
+.tab2-table-title {
+    margin-top:30rpx;
+    width:100%;
+    background:rgb(220,220,220);
+    height:88rpx;
+    border-bottom:2rpx solid #edecec;
+    display:flex;
+    text-align: center;
+    color:rgb(79,79,79);
+    font-size:24rpx;
+    line-height:88rpx;
+}
+.tab-table-line {
+    width:100%;
+    height:88rpx;
+    border-bottom:2rpx solid #edecec;
+    display:flex;
+    text-align: center;
+    color:rgb(79,79,79);
+    font-size:24rpx;
+    line-height:88rpx;
+}
+
+// ------------------------------新UI
+.header {
+    position: relative;
+    top: 0;
+    width:750rpx;
+    &-img {
+        width:750rpx;
+        height: 150rpx;
+    }
+}
+.body-box {
+    position:relative;
+    background:#fdfefe;
+    width:100%;
+    height:100rpx;
+}
+.intro {
+    display: flex;
+    position:absolute;
+    width:690rpx;
+    height:160rpx;
+    border-radius:10rpx;
+    box-shadow:0 5rpx 5rpx 5rpx rgba(222, 225, 231, 0.7);
+    top:-70rpx;
+    margin:auto;
+    background:white;
+    left:30rpx;
+    &-badge {
+        margin: 30rpx;
+        width:100rpx;
+        height: 100rpx;
+    }
+    &-detail {
+        width: 530rpx;
+        height: 100rpx;
+        margin: 32rpx 0 30rpx 0;
+    }
+    &-title {
+        height: 34rpx;
+        font-size: 34rpx;
+        line-height: 34rpx;
+        color: #333333;
+        font-weight: bold;
+    }
+    &-tag {
+        display:flex;
+        height:40rpx;
+        margin-top:20rpx;
+        &-each {
+            margin-right:10rpx;
+            padding-left: 16rpx;
+            padding-right: 16rpx;
+            height:40rpx;
+            font-size: 18rpx;
+            line-height: 40rpx;
+            color: white;
+            background: #ffa312;
+            border-radius: 6rpx;
+        }
+    }
+}
+// 学校介绍
+.title {
+    display: flex;
+    height: 34rpx;
+    margin-top:40rpx;
+    margin-left: 30rpx;
+    margin-bottom:26rpx;
+    font-weight:bold;
+    &-border {
+        width: 6rpx;
+        height: 32rpx;
+        margin-top: 1rpx;
+        background: #1fbe79;
+    }
+    &-text {
+        margin-left:19rpx;
+        font-size:34rpx;
+        line-height: 34rpx;
+    }
+}
+// 地图
+.location {
+    position: relative;
+    margin:35rpx auto 0;
+    width: 690rpx;
+    height: 90rpx;
+    &-img {
+        width:690rpx;
+        height: 90rpx;
+    }
+    &-text {
+        position: absolute;
+        top:27rpx;
+        left:83rpx;
+        font-size:26rpx;
+        color: #ffffff;
+    }
+}
+// 详细介绍
+.introduction{
+    position: relative;
+    margin: 38rpx auto;
+    width:690rpx;
+    overflow: hidden;
+    font-size: 30rpx;
+    line-height: 44rpx;
+    color: #333333;
+    &-shadow {
+        position: absolute;
+        bottom: 0;
+        width:690rpx;
+        height: 200rpx;
+        background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1))
+    }
+}
+.introduction-button {
+    width: 690rpx;
+    height: 80rpx;
+    margin: 14rpx auto 0;
+    border: 1rpx solid #1fbe79;
+    font-size: 30rpx;
+    line-height: 80rpx;
+    text-align: center;
+    color: #1fbe79;
+    border-radius: 6rpx;
+}
+.mates {
+    display:flex;
+    flex-wrap:wrap;
+    width:710rpx;
+    margin:15rpx auto 0;
+    background:#f7f8f9;
+    padding-bottom:20rpx;
+    &-item {
+        width:325rpx;
+        height: 120rpx;
+        margin: 10rpx;
+        border-radius: 6rpx;
+        box-shadow:0 5rpx 5rpx 5rpx rgba(222, 225, 231, 0.7);
+        background: #ffffff;
+        &-name {
+            margin:18rpx 0rpx 0 29rpx;
+            font-size:29rpx;
+            color:#333333;
+            font-weight:bold;
+        }
+        &-intro {
+            margin:10rpx 0rpx 0 29rpx;
+            font-size:21rpx;
+            color:#a9a9a9;
+        }
+    }
+}
+.fold-box {
+    display: flex;
+    width: 720rpx;
+}
+.fold-switch {
+    width: 6rpx;
+    height: 32rpx;
+    margin-top: 10rpx;
+    margin-right: 19rpx;
+    background: #1fbe79;
+}
+.fold-text {
+    font-size: 34rpx;
+    font-weight: bold;
+}
+.fold-item {
+    width: 720rpx;
+}
+.fold-content {
+    font-size:30rpx;
+    line-height: 44rpx;
+    color: #333333;
+}
+.ratio {
+    display: flex;
+    margin: 45rpx auto 0;
+    width: 640rpx;
+    height: 44rpx;
+    &-box {
+        display: flex;
+        width: 500rpx;
+        margin-left: 30rpx;
+        height: 44rpx;
+        margin-right: 30rpx;
+        box-sizing: border-size;
+        padding-top: 16rpx;
+    }
+    &-boy {
+        height: 12rpx;
+        background: #ffa312;
+        border-top-left-radius: 6rpx;
+        border-bottom-left-radius: 6rpx;
+    }
+    &-girl {
+        height: 12rpx;
+        background: #1fbe79;
+        border-top-right-radius: 6rpx;
+        border-bottom-right-radius: 6rpx;
+    }
+    &-text {
+        margin: 19rpx auto;
+        font-size: 34rpx;
+        text-align: center;
+        font-weight: bold;
+    }
+}
+</style>
+<style lang="less">
+.van-collapse-item__content {
+    padding:0px 0 0 15px !important;
+}
+.van-cell {
+    padding:20rpx 0 20rpx 30rpx !important;
+}
+</style>

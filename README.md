@@ -1,3 +1,2 @@
-# front_gkzy_wx
+# gkzywx
 
-高考志愿微信小程序项目

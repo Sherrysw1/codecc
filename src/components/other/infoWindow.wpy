@@ -1,0 +1,321 @@
+<template>
+     <view class="information-back">
+        <image class="information-close" src="../../resource/img/information_close.png" @tap="closeInfo"/>
+        <view class="information-box">
+          <view class="personInfo">
+            <view class="person-title">完善信息，为您提供更精准的服务
+            </view>
+            <view class="person-item">
+              <image class="person-icon-position" src="../../resource/img/person_position.png"/>
+              <view class="position-title">
+                高考地区
+              </view>
+              <picker class="position-select" range="{{studentProvinceLIst}}" value="{{studentProvinceIndex}}" bindchange="provinceChange" disabled>
+                <text style="margin-right:-20rpx">{{studentProvinceLIst[studentProvinceIndex]}}</text>
+                <image class="position-select-img" src="../../resource/img/person_down.png"/>
+              </picker>
+            </view>
+            <view class="person-item">
+              <image class="person-icon-subject" src="../../resource/img/person_subject.png" />
+              <view class="position-title" style="margin-left:13.5rpx;">
+                高考科目
+              </view>
+              <picker class="position-select" range="{{studentTypeList}}" value="{{studentTypeIndex}}" bindchange="subjectChange" disabled>
+                <text style="margin-right:-20rpx">{{studentTypeList[studentTypeIndex]}}</text>
+                <image class="position-select-img" src="../../resource/img/person_down.png"/>
+              </picker>
+            </view>
+            <view class="person-item">
+              <image class="person-icon-score" src="../../resource/img/person_score.png"/>
+              <view class="position-title" style="margin-left:17rpx;">
+                我的分数
+              </view>
+              <input class="position-select" placeholder="请输入分数" bindblur="scoreChange" value="{{studentScore}}" type="number"/>
+            </view>
+            <view class="person-item">
+              <image class="person-icon-major" src="../../resource/img/person_major.png"/>
+              <view class="position-title" style="margin-left:15rpx;">
+                偏好专业
+              </view>
+              <input class="position-select" placeholder="请输入专业" bindblur="majorChange" disabled/>
+            </view>
+            <view class="person-item">
+              <image class="person-icon-college" src="../../resource/img/person_college.png"/>
+              <view class="position-title" style="margin-left:11.5rpx;">
+                理想院校
+              </view>
+              <input class="position-select" placeholder="请输入院校" bindblur="collegeChange" disabled/>
+            </view>
+            <form>
+              <button class="person-button" @tap="updateInfo">
+                提交
+              </button>
+            </form>
+          </view>
+        </view>
+        <i-toast id="toast" /> 
+     </view>
+</template>
+<script>
+const { $Toast } = require('../../iview/base/index');
+import wepy from 'wepy';
+import common from '../../mixins/common';
+export default class infoWindow extends wepy.component {
+    config = {
+        usingComponents: {
+            'i-toast': '../../iview/toast/index'
+        }
+    }
+    data = {
+        studentProvinceLIst: ['不限地区', '安徽', '澳门', '北京', '重庆', '福建', '甘肃', '广东', '广西', '贵州', '海南', '河北', '河南', '黑龙江', '湖北', '湖南', '吉林', '江苏', '江西', '辽宁', '内蒙古', '宁夏', '青海', '山东', '山西', '陕西', '上海', '四川', '台湾', '天津', '西藏', '香港', '新疆', '云南', '浙江'],
+        studentTypeList: ['请选择科目', '文科', '理科'],
+        collegeTypeList: ['类别', '综合', '理工', '军事', '农林', '医药', '艺术', '财经', '语言', '民族', '政法', '师范', '体育', 'HND项目', '中外合作办学', '远程教育学院', '普通本科', '成人教育', '高职高专', '独立学院', '其他'],
+        collegeSelectList: ['不限', '985', '211'],
+        studentProvinceIndex: 0,
+        studentTypeIndex: 0,
+        studentProvince: '',
+        studentType: '',
+        studentScore: '',
+        preferMajor: '',
+        preferCollege: '',
+        isStudentProvice: false,
+        isStudentType: false,
+        isStudentScore: false,
+        isStudentPreferMajor: false,
+        isStudentPreferCollege: false
+    }
+    props = {
+    }
+    mixins = [
+        common
+    ]
+    methods = {
+        provinceChange (e) {
+            var self = this;
+            self.studentProvinceIndex = e.detail.value;
+            self.$apply();
+        },
+        subjectChange (e) {
+            var self = this;
+            self.studentTypeIndex = e.detail.value;
+            self.$apply();
+        },
+        scoreChange (e) {
+            var self = this;
+            self.studentScore = e.detail.value;
+            self.$apply();
+        },
+        majorChange (e) {
+            var self = this;
+            self.preferMajor = e.detail.value;
+            self.$apply();
+        },
+        collegeChange (e) {
+            var self = this;
+            self.preferCollege = e.detail.value;
+            self.$apply();
+        },
+        async updateInfo () {
+            var self = this;
+            const resUpdate = await this.request({
+                url: self.requestUrl + '/gkzywx/wxUser/updateWxUserStuInfo.do',
+                method: 'POST',
+                header: {
+                    'content-type': 'application/json',
+                    'cookie': 'JSESSIONID=' + this.$parent.$parent.globalData.sessionId
+                },
+                data: {
+                    id: self.id,
+                    studentProvince: self.studentProvinceLIst[self.studentProvinceIndex],
+                    studentScore: self.studentScore,
+                    studentType: self.studentTypeList[self.studentTypeIndex],
+                    preferMajor: self.preferMajor === '' ? '--' : self.preferMajor,
+                    preferCollege: self.preferCollege === '' ? '--' : self.preferCollege
+                }
+            }, false).catch(err => {
+                console.log(err);
+            });
+            if (resUpdate.status === 0) {
+                $Toast({
+                    content: resUpdate.msg,
+                    type: 'success'
+                });
+                const resUserDetail = await this.request({
+                    url: self.requestUrl + '/gkzywx/wxUser/getWxUserDetail.do',
+                    method: 'POST',
+                    header: {
+                        'content-type': 'application/json',
+                        'cookie': 'JSESSIONID=' + this.$parent.$parent.globalData.sessionId
+                    },
+                    data: {
+                    }
+                }, false).catch(err => {
+                    console.log(err);
+                });
+                if (resUserDetail.status === 0) {
+                    this.$emit('changeInfoSignal', false, false);
+                    console.log('changeInfoSignal');
+                }
+            }
+            else {
+                $Toast({
+                    content: resUpdate.msg,
+                    type: 'error'
+                });
+            }
+        },
+        // 关闭window
+        closeInfo () {
+            this.$emit('changeInfoSignal', false, true);
+        }
+    }
+    async onLoad () {
+        this.getInfo();
+    }
+    // 获取表单中已经填写的基本信息
+    async getInfo () {
+        let self = this;
+        self.id = self.$parent.$parent.dataFromServer.id;
+        self.studentProvince = self.$parent.$parent.dataFromServer.studentProvince;
+        self.studentType = self.$parent.$parent.dataFromServer.studentType;
+        self.studentScore = self.$parent.$parent.dataFromServer.studentScore;
+        self.preferMajor = self.$parent.$parent.dataFromServer.preferMajor;
+        self.preferCollege = self.$parent.$parent.dataFromServer.preferCollege;
+        self.studentProvinceLIst.forEach((element, index) => {
+            if (element === self.studentProvince) {
+                self.studentProvinceIndex = index;
+            }
+        });
+        self.studentTypeList.forEach((element, index) => {
+            if (element === self.studentType) {
+                self.studentTypeIndex = index;
+            }
+        });
+        self.studentScore !== -1 ? self.studentScore = self.studentScore : self.studentScore = '';
+        self.preferMajor !== '--' ? self.preferMajor = self.preferMajor : self.preferMajor = '';
+        self.preferCollege !== '--' ? self.preferCollege = self.preferCollege : self.preferCollege = '';
+        self.$apply();
+    }
+}
+</script>
+<style lang="less" scoped>
+ // 填写信息
+  .information-back {
+    top:0;
+    bottom:0;
+    background-color: rgba(4, 4, 4,0.8);
+    width:100%;
+    position:absolute;
+  }
+  .information-box {
+    width:694rpx;
+    height:805rpx;
+    background:white;
+    border-radius:20rpx;
+    margin:26rpx auto 0;
+  }
+  .information-close {
+    width:47rpx;
+    height:47rpx;
+    margin-top:47rpx;
+    margin-left:634rpx;
+  }
+// 个人信息修改
+.personInfo {
+  width:698rpx;
+  height:580rpx;
+  margin:30rpx auto 0;
+  border-radius:30rpx;
+  padding-top:48rpx;
+}
+.person-title {
+  font-size: 36rpx;
+  color:rgb(51,51,51);
+  letter-spacing: 2rpx;
+  margin-bottom: 53rpx;
+  text-align: center;
+}
+// 每一个item
+.person-item {
+  width:100%;
+  height:60rpx;
+  margin-top:43rpx;
+  display:flex;
+}
+.position-title {
+  line-height: 60rpx;
+  font-size: 30rpx;
+  margin-left: 18rpx;
+  color:#4f4f4f;
+  letter-spacing: 3rpx;
+}
+.position-select {
+  width: 371rpx;
+  height: 60rpx;
+  margin-left: 60rpx;
+  border-radius: 10rpx;
+  background:#eeeeee;
+  font-size: 28rpx;
+  line-height: 60rpx;
+  color:rgb(51,51,51);
+  letter-spacing: 2rpx;
+  text-align: center;
+}
+.position-select-img {
+  width:23rpx;
+  height:13rpx;
+  margin-top:23.5rpx;
+  float:right;
+  margin-right:20rpx;
+}
+.person-icon-position {
+  width:30rpx;
+  height:44rpx;
+  margin-top:8rpx;
+  margin-left:50rpx;
+}
+.person-icon-subject {
+  width:39rpx;
+  height:38rpx;
+  margin-top:11rpx;
+  margin-left:45.5rpx;
+}
+.person-icon-score {
+  width:32rpx;
+  height:38rpx;
+  margin-top:11rpx;
+  margin-left:49rpx;
+}
+.person-icon-major {
+  width:36rpx;
+  height:41rpx;
+  margin-top:9.5rpx;
+  margin-left:47rpx;
+}
+.person-icon-college {
+  width:43rpx;
+  height:39rpx;
+  margin-top:10.5rpx;
+  margin-left:43.5rpx;
+}
+// 确认修改按钮
+.person-button {
+  width:630rpx;
+  height:83rpx;
+  border-radius: 10rpx;
+  background:#1fbe79;
+  margin:49rpx auto 0;
+  text-align:center;
+  color:white;
+  font-size:32rpx;
+  line-height:83rpx;
+  letter-spacing: 5rpx;
+}
+.person-tip {
+  width:100%;
+  font-size:30rpx;
+  margin-top:25rpx;
+  color:#999999;
+  text-align: center;
+}
+</style>

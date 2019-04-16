@@ -1,0 +1,174 @@
+<template>
+    <view>
+        <view class="header">
+            <view class="header-title">
+                经济学类
+            </view>
+            <view class="header-detail"><text>200所开设院校　｜　5个细分专业</text></view>
+            <view class="header-button">切换文章模式</view>
+        </view>
+        <tabThree>
+            <view slot="tab1">专业介绍</view>
+            <view slot="tab2">未来发展</view>
+            <view slot="tab3">报考选择</view>
+            <view slot="detailTab1">
+                <title>
+                    <view>基本介绍</view>
+                </title>
+                <majorIntro>
+                    <view slot="title1">门类</view>
+                    <view slot="title2">门类</view>
+                    <view slot="title3">门类</view>
+                    <view slot="title4">门类</view>
+                    <view slot="name1">经济学类</view>
+                    <view slot="name2">经济学类</view>
+                    <view slot="name3">经济学类</view>
+                    <view slot="name4">经济学类</view>
+                </majorIntro>
+                <buttonHidden>
+                    <view>
+                        <text>slkjfalkjfo ifjdsiofajdifojasoifjsdlkfjsdalkf技术的分厘卡士大夫将来肯定是房间里的伤口就分厘卡电视机分厘卡电视机分厘卡的撒娇但是看见分厘卡圣诞节分厘卡撒酒疯拉萨扩大 埃里克的身份就立刻的萨芬记录卡多少积分立刻电视机分厘卡电视机分厘卡电视机法律爱上看见分厘卡电视机分厘卡电视机分厘卡卡迪夫苏联开始金佛阿斯顿的肌肤啊世界的分厘卡圣诞节分厘卡圣诞节分厘卡见风使舵卢卡斯的的杰弗里萨克斯的 减肥的撒赖咖啡碱撒了点咖啡机哦i问人家</text>
+                    </view>
+                </buttonHidden>
+                <title>
+                    <view>专业分支</view>
+                </title>
+                <buttonHiddenMajor>
+                    <view>
+                        <text>slkjfalkjfo ifjdsiofajdifojasoifjsdlkfjsdalkf技术的分厘卡士大夫将来肯定是房间里的伤口就分厘卡电视机分厘卡电视机分厘卡的撒娇但是看见分厘卡圣诞节分厘卡撒酒疯拉萨扩大 埃里克的身份就立刻的萨芬记录卡多少积分立刻电视机分厘卡电视机分厘卡电视机法律爱上看见分厘卡电视机分厘卡电视机分厘卡卡迪夫苏联开始金佛阿斯顿的肌肤啊世界的分厘卡圣诞节分厘卡圣诞节分厘卡见风使舵卢卡斯的的杰弗里萨克斯的 减肥的撒赖咖啡碱撒了点咖啡机哦i问人家</text>
+                    </view>
+                </buttonHiddenMajor>
+                <title>
+                    <view>学习内容</view>
+                </title>
+                <card>
+                    <view slot="title">经济学基础课程</view>
+                    <view slot="detail">经济学原理、宏观经济学、微观经济学饿、计量经济学等</view>
+                </card>
+                <card>
+                    <view slot="title">数理统计类课程</view>
+                    <view slot="detail">经济学原理、宏观经济学、微观经济学饿、计量经济学等</view>
+                </card>
+                <card>
+                    <view slot="title">经济学基础课程的延伸</view>
+                    <view slot="detail">行为经济学、劳动经济学、国际经济学等领域拓展课程；时间序列分析、动态优化理论等工具类课程</view>
+                </card>
+            </view>
+            <view slot="detailTab2">
+                <title>
+                    <view>毕业去向</view>
+                </title>
+                <card>
+                    <view slot="title">直接就业</view>
+                    <view slot="detail">该专业属于应用型学科，部分同学会在本科毕业后选择直接就业，一般在跨国公司或金融行业工作。</view>
+                </card>
+                <card>
+                    <view slot="title">继续深造</view>
+                    <view slot="detail">因学科难度、工作需要（招聘、晋升、能力要求）等原因，目前越来越多的人选择继续深造</view>
+                </card>
+                <title>
+                    <view>就业情况</view>
+                </title>
+            </view>
+            <view slot="detailTab3">
+                <title>
+                    <view>报考贴士</view>
+                </title>
+                <buttonHiddenExam>
+                    <view>
+                        <text>slkjfalkjfo ifjdsiofajdifojasoifjsdlkfjsdalkf技术的分厘卡士大夫将来肯定是房间里的伤口就分厘卡电视机分厘卡电视机分厘卡的撒娇但是看见分厘卡圣诞节分厘卡撒酒疯拉萨扩大 埃里克的身份就立刻的萨芬记录卡多少积分立刻电视机分厘卡电视机分厘卡电视机法律爱上看见分厘卡电视机分厘卡电视机分厘卡卡迪夫苏联开始金佛阿斯顿的肌肤啊世界的分厘卡圣诞节分厘卡圣诞节分厘卡见风使舵卢卡斯的的杰弗里萨克斯的 减肥的撒赖咖啡碱撒了点咖啡机哦i问人家</text>
+                    </view>
+                </buttonHiddenExam>
+                <title>
+                    <view>院校分类</view>
+                </title>
+                <card>
+                    <view slot="title">财经院校</view>
+                    <view slot="detail">对外经贸大学，中央财经大学,对外经贸大学，中央财经大学,对外经贸大学，中央财经大学,对外经贸大学，中央财经大学,对外经贸大学，中央财经大学</view>
+                </card>
+                <card>
+                    <view slot="title">财经院校</view>
+                    <view slot="detail">对外经贸大学，中央财经大学,对外经贸大学，中央财经大学,对外经贸大学，中央财经大学,对外经贸大学，中央财经大学,对外经贸大学，中央财经大学</view>
+                </card>
+            </view>
+        </tabThree>
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy';
+import common from '../../mixins/common';
+import tabThree from '../../components/common/tabThree';
+import title from '../../components/common/title';
+import majorIntro from '../../components/major/majorIntro';
+import buttonHidden from '../../components/common/buttonHidden';
+import card from '../../components/major/majorCard';
+export default class Index extends wepy.page {
+    config = {
+        navigationBarTitleText: '',
+        'usingComponents': {
+            'i-tabs': '../../iview/tabs/index',
+            'i-tab': '../../iview/tab/index',
+            'i-spin': '../../iview/spin/index'
+        }
+    }
+    components = {
+        tabThree: tabThree,
+        title: title,
+        majorIntro: majorIntro,
+        buttonHidden: buttonHidden,
+        buttonHiddenMajor: buttonHidden,
+        buttonHiddenExam: buttonHidden,
+        card: card
+    }
+    mixins = [
+        common
+    ]
+    data = {
+    }
+    methods = {
+    }
+    async onLoad() {
+    }
+}
+</script>
+<style lang="less" scoped>
+.header {
+    position: relative;
+    margin: 30rpx auto 0;
+    width: 691rpx;
+    height: 160rpx;
+    background: #1fbe79;
+    border-radius: 10rpx;
+    box-shadow: 0 0 20rpx rgba(31,190,121,0.4);
+    margin-bottom: 20rpx;
+    &-title {
+        position: absolute;
+        top: 40rpx;
+        left: 32rpx;
+        font-size: 34rpx;
+        color: white;
+        font-weight: bold;
+    }
+    &-detail {
+        position: absolute;
+        top: 95rpx;
+        left: 32rpx;
+        color: white;
+        font-size: 24rpx;
+    }
+    &-button {
+        position: absolute;
+        bottom: 13rpx;
+        right: 17rpx;
+        width: 177rpx;
+        height: 52rpx;
+        line-height: 52rpx;
+        background: linear-gradient(rgb(247,243,225), rgb(234,208,182));
+        font-size: 24rpx;
+        color: #7e6851;
+        border-radius: 6rpx;
+        text-align: center;
+    }
+}
+</style>

@@ -1,0 +1,130 @@
+<template>
+    <view class="box">
+        <view class="intro">
+            <slot name="intro"></slot>
+        </view>
+        <view class="select">
+            <picker bindchange="yearChange" value="{{yearIndex}}" range="{{year}}">
+                <view class="year">
+                    <view class="year-text">{{year[yearIndex]}}</view>
+                    <image class="year-img" src="../../../resource/img/xiala.png"/>
+                </view>
+            </picker>
+            <picker bindchange="subjectChange" value="{{subjectIndex}}" range="{{subject}}">
+                <view class="subject">
+                    <view class="subject-text">{{subject[subjectIndex]}}</view>
+                    <image class="subject-img" src="../../../resource/img/xiala.png"/>
+                </view>
+            </picker>
+            <picker bindchange="levelChange" value="{{levelIndex}}" range="{{level}}">
+                <view class="level">
+                    <view class="level-text">{{level[levelIndex]}}</view>
+                    <image class="level-img" src="../../../resource/img/xiala.png"/>
+                </view>
+            </picker>
+        </view>
+    </view>
+</template>
+<script>
+import wepy from 'wepy';
+import common from '../../../mixins/common';
+export default class collegeRank extends wepy.component {
+    data = {
+        year: ['2018年', '2017年', '2016年', '2015年'],
+        yearIndex: 0,
+        subject: ['理科', '文科'],
+        subjectIndex: 0,
+        level: ['本科一批', '本科二批'],
+        levelIndex: 0
+    }
+    props = {
+    }
+    mixins = [
+        common
+    ]
+    options = {
+    }
+    methods = {
+        yearChange (e) {
+            console.log(e.detail.value);
+        },
+        subjectChange (e) {
+            console.log(e.detail.value);
+        },
+        levelChange (e) {
+            console.log(e.detail.value);
+        }
+    }
+    events = {
+    }
+    async onLoad () {
+    }
+}
+</script>
+<style lang="less" scoped>
+.box {
+    position: relative;
+    display: flex;
+    width: 100%;
+    height: 80rpx;
+    background: #f8f8f8;
+}
+.intro {
+    line-height: 80rpx;
+    margin-left: 30rpx;
+    font-size: 26rpx;
+    color: #666666;
+}
+.select {
+    position: absolute;
+    display: flex;
+    flex-direction: row-reverse;
+    right: 0;
+    height: 80rpx;
+}
+.year {
+    display: flex;
+    padding-right: 30rpx;
+    padding-top:1rpx;
+    &-text {
+        line-height: 80rpx;
+        font-size:26rpx;
+        color: #666666;
+    }
+    &-img {
+        margin: 36rpx 0 0 9rpx;
+        width: 14rpx;
+        height: 8rpx;
+    }
+}
+.subject {
+    display: flex;
+    width: 125rpx;
+    padding-top:1rpx;
+    &-text {
+        line-height: 80rpx;
+        font-size:26rpx;
+        color: #666666;
+    }
+    &-img {
+        margin: 36rpx 0 0 9rpx;
+        width: 14rpx;
+        height: 8rpx;
+    }
+}
+.level {
+    display: flex;
+    width: 176rpx;
+    padding-top:1rpx;
+    &-text {
+        line-height: 80rpx;
+        font-size:26rpx;
+        color: #666666;
+    }
+    &-img {
+        margin: 36rpx 0 0 9rpx;
+        width: 14rpx;
+        height: 8rpx;
+    }
+}
+</style>

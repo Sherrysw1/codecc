@@ -1,0 +1,234 @@
+<template>
+    <view >
+        <view>
+            <person></person>
+            <view class="select-box">
+                <picker bindchange="changeProvince" value="{{indexProvince}}" range="{{schoolProvinceList}}" class="select-choose1">
+                    <view class="select-choose1-title" >
+                        {{indexProvince === -1 ? '院校地区' : schoolProvinceList[indexProvince]}}
+                    </view>
+                    <image class="select-choose1-img" src="../resource/img/collegeMain_down.png"/>
+                </picker>
+                <picker bindchange="changeLevel" value="{{indexLevel}}" range="{{f985items}}" class="select-choose2">
+                    <view class="select-choose2-title">
+                        {{indexLevel === -1 ? '985/211' : f985items[indexLevel]}}
+                    </view>
+                    <image class="select-choose2-img" src="../resource/img/collegeMain_down.png"/>
+                </picker>
+                <picker bindchange="changeType" value="{{indexType}}" range="{{typeItems}}" class="select-choose3">
+                    <view class="select-choose3-title">
+                        {{indexType === -1 ? '类型' : typeItems[indexType]}}
+                    </view>
+                    <image class="select-choose3-img" src="../resource/img/collegeMain_down.png"/>
+                </picker>
+                <picker bindchange="changeScore" value="{{indexScore}}" range="{{scoreItems}}" class="select-choose4">
+                    <view class="select-choose4-title">
+                        {{scoreItems[indexScore]}}
+                    </view>
+                    <image class="select-choose4-img" src="../resource/img/collegeMain_down.png"/>
+                </picker>
+            </view>
+            <predictItem></predictItem>
+        </view>    
+    </view>
+</template>
+<script>
+import wepy from 'wepy';
+import common from '../mixins/common';
+import person from '../components/person';
+import predictItem from '../components/predict/predictitem';
+export default class predictCollege extends wepy.page {
+    config = {
+        navigationBarTitleText: '大学预测'
+    }
+    components = {
+        person: person,
+        predictItem: predictItem
+    }
+    mixins = [
+        common
+    ]
+    data = {
+        indexProvince: -1,
+        indexLevel: -1,
+        indexType: -1,
+        indexScore: 0,
+        f985items: ['不限', '985', '211'],
+        typeItems: ['不限', '综合', '理工', '军事', '农林', '医药', '艺术', '财经', '语言', '民族', '政法', '师范', '体育', 'HND项目', '中外合作办学', '远程教育学院', '普通本科', '成人教育', '高职高专', '独立学院', '其他'],
+        scoreItems: ['不限分数', '低于400', '400-500', '500-550', '550-600', '600-650', '650以上'],
+        scoreList: [[0, 750], [0, 400], [400, 500], [500, 550], [550, 600], [600, 650], [650, 750]],
+        currentTab: 0,
+        schoolProvinceList: ['不限地区', '上海', '云南', '内蒙古', '北京', '吉林', '四川', '天津', '宁夏', '安徽', '山东', '山西', '广东', '广西', '新疆', '江苏', '江西', '河北', '河南', '浙江', '海南', '湖北', '湖南', '澳门', '甘肃', '福建', '西藏', '贵州', '辽宁', '重庆', '陕西', '青海', '香港', '黑龙江'],
+        schoolInfoList: [],
+        studentProvince: '',
+        schoolType: '',
+        studentType: '',
+        schoolProvince: '',
+        minScore: 0,
+        maxScore: 750,
+        pageNum: 1,
+        pageSize: 20,
+        is985: 0,
+        is211: 0
+    }
+    computed = {}
+    methods = {
+        // 下拉框详情：院校地区
+        async changeProvince (e) {
+            var self = this;
+            self.indexProvince = e.detail.value;
+            self.schoolProvince = self.schoolProvinceList[self.indexProvince];
+            this.$broadcast('getPovince', self.indexProvince, self.schoolProvince);
+            self.$apply();
+        },
+        // 下拉框-985/211
+        async changeLevel (e) {
+            var self = this;
+            self.indexLevel = parseInt(e.detail.value);
+            if (self.indexLevel === 0) {
+                self.is211 = '';
+                self.is985 = '';
+            }
+            if (self.indexLevel === 1) {
+                self.is985 = 1;
+                self.is211 = 1;
+            }
+            if (self.indexLevel === 2) {
+                self.is211 = 1;
+                self.is985 = 0;
+            }
+            this.$broadcast('get985', self.is985, self.is211);
+            console.log('get985', self.is985, self.is211);
+            self.$apply();
+        },
+        // 下拉框-学校类别
+        async changeType (e) {
+            var self = this;
+            self.indexType = e.detail.value;
+            self.schoolType = self.typeItems[self.indexType];
+            this.$broadcast('getSchoolType', self.indexType, self.schoolType);
+            self.$apply();
+        },
+        // 下拉框-分数线
+        async changeScore (e) {
+            var self = this;
+            self.indexScore = e.detail.value;
+            this.$broadcast('getScore', self.indexScore);
+            self.$apply();
+        }
+    }
+    events = {
+    }
+    onLoad() {
+        let self = this;
+        self.globalData = this.$parent.globalData;
+        if (this.$parent.globalData.userInfo) {
+            self.avatarUrl = this.$parent.globalData.userInfo.avatarUrl;
+        }
+        else {
+            this.$parent.getUserInfo(function (userInfo) {
+                self.$parent.globalData.userInfo = userInfo;
+                self.avatarUrl = self.$parent.globalData.userInfo.avatarUrl;
+                self.$apply();
+            });
+        }
+    }
+    async getUser () {
+        let self = this;
+        self.globalData = this.$parent.globalData;
+        self.userInfoFromServer = self.globalData.userInfoFromServer;
+        self.$apply();
+    }
+}
+</script>
+<style lang="less" scoped>
+//下拉框
+.select-box {
+    width:100%;
+    height:70rpx;
+    border-top:1rpx solid #e0e0e0;
+    border-bottom:1rpx solid #e0e0e0;
+    display:flex;
+}
+.select-choose1 {
+    font-size:26rpx;
+    width:220rpx;
+    height:68rpx;
+    color:rgb(51, 51, 51);
+}
+.select-choose1-title {
+    text-align:center;
+    float:left;
+    width:174rpx;
+    line-height:68rpx;
+    margin-right:12rpx;
+}
+.select-choose1-img {
+    float:left;
+    width:19rpx;
+    height:10rpx;
+    margin-top:31rpx;
+    margin-right:14rpx;
+}
+.select-choose2 {
+    font-size:26rpx;
+    width:180rpx;
+    height:68rpx;
+    color:rgb(51, 51, 51);
+}
+.select-choose2-title {
+    text-align:center;
+    float:left;
+    width:134rpx;
+    line-height:68rpx;
+    margin-right:12rpx;
+}
+.select-choose2-img {
+    float:left;
+    width:19rpx;
+    height:10rpx;
+    margin-top:31rpx;
+    margin-right:14rpx;
+}
+.select-choose3 {
+    font-size:26rpx;
+    width:130rpx;
+    height:68rpx;
+    color:rgb(51, 51, 51);
+}
+.select-choose3-title {
+    text-align:center;
+    float:left;
+    width:87rpx;
+    line-height:68rpx;
+    margin-right:12rpx;
+}
+.select-choose3-img {
+    float:left;
+    width:19rpx;
+    height:10rpx;
+    margin-top:31rpx;
+    margin-right:14rpx;
+}
+.select-choose4 {
+    font-size:26rpx;
+    width:160rpx;
+    height:68rpx;
+    color:rgb(51, 51, 51);
+}
+.select-choose4-title {
+    text-align:center;
+    float:left;
+    width:117rpx;
+    line-height:68rpx;
+    margin-right:12rpx;
+}
+.select-choose4-img {
+    float:left;
+    width:19rpx;
+    height:10rpx;
+    margin-top:31rpx;
+    margin-right:14rpx;
+}
+
+</style>

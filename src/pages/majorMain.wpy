@@ -1,0 +1,313 @@
+<template>
+    <view class="main-view" >
+        <view style="height:4rpx"></view>
+        <!--part 1-->
+        <person></person>
+        <!--part 2-->
+        <view class="second-part">
+            <view style="width:58rpx"></view>
+            <!--本科/专科/...下拉选择框-->
+            <view style='width:169rpx'> 
+                <picker bindchange="clickLevel" value="{{majorLevelIndex}}" range="{{majorLevelList}}" class="studenttype-charset">
+                <!--文字显示-->
+                    <view >
+                        {{majorLevelList[majorLevelIndex]}}
+                        <i class="iconfont icon-xiala-" style="weight:20rpx;height:20rpx"></i>
+                    </view>
+                </picker>
+            </view>
+            <!--专业搜索输入框，点击进入搜索页-->
+            <view class="search-box" @tap="toMajorSearch">
+                <image class="search-img" src="../resource/img/searchcircle.png" />
+                <view class="search-text"> 输入专业名称</view>
+            </view>
+        </view>
+        <!--part 3-->
+        <view class="third-part" style="position:absolute;left:0px;right:0px;bottom:0px;padding:0;margin: 0;">
+            <!--超分类列表-->
+            <view style='width:210rpx;height:100%'>
+                <view wx:for="{{superClassList}}" wx:for-index="idx" wx:for-item="item">
+                <view class="superClass-cell" @tap="clickSuperClass({{majorLevel}}, {{item}})"> {{item}} </view> 
+                </view> 
+            </view>
+            <view style='width:17rpx;height:100%'></view>
+            <!--一级分类列表-->
+            <!--分类名称-->
+            <view style='width:523rpx;background:white;height:100%;overflow: auto;'>
+                <view style='display:flex;' wx:for="{{superSubClass}}" wx:for-item="item" wx:for-index="index" > 
+                    <view class="firstClass-cell"  @tap="GoToMajorList({{majorLevel}}, {{item.secondClassType}})">
+                        <view style='width:40rpx'></view>
+                        <view style='width:400rpx;' class="firstClassName-charset">{{item.secondClassType}}</view>
+                        <view style='width:40rpx;' class="majorNum-charset">{{item.benkeMajorNum + item.zhuankeMajorNum}}</view>
+                        <view style="width:17rpx"></view>
+                        <image src="../resource/img/fanhui.png" style="display:flex; width:15rpx; height:30rpx;line-height:80rpx align-item:center" />
+                    </view>
+                </view>
+            </view>
+        </view>
+    </view>
+</template>
+<script>
+import wepy from 'wepy';
+import common from '../mixins/common';
+import person from '../components/person';
+export default class majorMain extends wepy.page {
+    config = {
+        navigationBarTitleText: '查专业',
+        usingComponents: {
+            'i-cell-group': '../iview/cell-group/index',
+            'i-cell': '../iview/cell/index',
+            'i-spin': '../../iview/spin/index'
+        }
+    }
+    components = {
+        person: person
+    }
+    mixins = [
+        common
+    ]
+    data = {
+        isloaded: true,
+        majorLevelIndex: 0, // 默认为0，即本科
+        majorLevelList: ['本科', '专科'],
+        // 超分类点击后的请求结果
+        superClassRes: {},
+        studentInfo: '陕西理科 275分 ',
+        // 目前暂时写死的超分类列表
+        superClassList: [],
+        superSubClass: [],
+        province: '',
+        subject: '',
+        score: -1,
+        globalData: null,
+        superClass: '',
+        majorLevel: '本科'
+    }
+    computed = {}
+    methods = {
+        /**
+         * brief:设置本科/专科的选项
+         * author:dragon
+         * detail：改变data中majorLevelIndex，即当前序号
+         *  */
+        async clickLevel (majorLevelDetail) {
+            var self = this;
+            self.majorLevelIndex = majorLevelDetail.detail.value;
+            self.majorLevel = self.majorLevelList[self.majorLevelIndex];
+            await this.requestSuper();
+            await this.requestSub(self.majorLevel, self.superClass);
+            self.$apply();
+        },
+        personClick () {
+            wepy.navigateTo({
+                url: '/pages/personInfo'
+            });
+        },
+        /**
+         * brief:点击一级分类实现页面跳转
+         * author:dragon
+         */
+        async GoToMajorList (majorLevel, firstClass) {
+            wepy.navigateTo({
+                url: `/pages/major/majorList?majorLevel=${majorLevel}&firstClass=${firstClass}`
+            });
+        },
+        // 点击超分类
+        async clickSuperClass (type, superClass) {
+            let self = this;
+            self.superClass = superClass;
+            const resSub = await this.request({
+                url: this.$parent.globalData.requestUrl + '/gkzywx/majorTypeMap/getSecondClassTypeList.do',
+                data: {
+                    superClass: superClass,
+                    majorLevel: type,
+                    pageSize: 50,
+                    pageNum: 1
+                },
+                method: 'POST'
+            }, false).catch(err => {
+                console.log(err);
+            });
+            if (resSub.status === 0) {
+                self.superSubClass = resSub.data.secondClassTypeVoList;
+                self.$apply();
+            }
+        },
+        toMajorSearch () {
+            wepy.navigateTo({
+                url: '/pages/major/majorSearch'
+            });
+        }
+    }
+    events = {
+    }
+    async onLoad() {
+        let self = this;
+        this.$parent.getUserInfo(function (userInfo) {
+            if (userInfo) {
+                self.userInfo = userInfo;
+            }
+            self.$apply();
+        });
+        self.globalData = this.$parent.globalData;
+        if (self.globalData.userInfoFromServer.studentScore !== -1) {
+            self.score = self.globalData.userInfoFromServer.studentScore;
+        }
+        self.province = self.globalData.userInfoFromServer.studentProvince;
+        self.subject = self.globalData.userInfoFromServer.studentType;
+        await this.requestSuper();
+        await this.requestSub(self.majorLevel, self.superClassList[0]);
+        self.isloaded = false;
+        self.$apply();
+    }
+    // 请求所有标签
+    async requestSuper () {
+        let self = this;
+        const resSuper = await this.request({
+            url: this.requestUrl + '/gkzywx/majorTypeMap/getAllSuperClassNameByLevel.do',
+            method: 'POST',
+            header: {
+                'content-type': 'application/json',
+                'cookie': 'JSESSIONID=' + this.globalData.sessionId
+            },
+            data: {
+                majorLevel: self.majorLevel
+            }
+        }, false).catch(err => {
+            console.log(err);
+        });
+        if (resSuper.status === 0) {
+            self.superClassList = resSuper.data;
+            self.superClass = resSuper.data[0];
+            self.$apply();
+        }
+    }
+    // 请求子分类
+    async requestSub (type, superClass) {
+        let self = this;
+        const resSub = await this.request({
+            url: this.$parent.globalData.requestUrl + '/gkzywx/majorTypeMap/getSecondClassTypeList.do',
+            data: {
+                superClass: superClass,
+                majorLevel: type,
+                pageSize: 50,
+                pageNum: 1
+            },
+            method: 'POST'
+        }, false).catch(err => {
+            console.log(err);
+        });
+        if (resSub.status === 0) {
+            self.superSubClass = resSub.data.secondClassTypeVoList;
+            self.$apply();
+        }
+    }
+}
+</script>
+<style lang="less" scoped>
+.main-view{
+  width:100%;
+  height:100%;
+  background:#f3f3f3;
+}
+.first-part{
+  display:flex;
+  background:white;
+  height:114rpx;
+  align-items:center;
+}
+.second-part{
+  display: flex;
+  flex-direction: row;
+  height:90rpx;
+}
+.third-part{
+  display:flex;
+  width:100%;
+  background: #f3f3f3;
+  position: absolute;
+  top:208rpx;
+}
+.title-info{
+  display: flex;
+  flex-direction: row;
+  align-items:flex-start; 
+}
+.studentinfo-charset {
+font-size: 30rpx;
+font-family: "PingFangSC";
+color: rgb(51, 51, 51);
+align-items: center;
+line-height: 1.615;
+}
+.studenttype-charset {
+font-size: 30rpx;
+font-family: "SimHei";
+color: rgb(51, 51, 51);
+// justify-content:center;
+align-items: center;
+// text-align: center;
+line-height: 90rpx;
+}
+.majorNum-charset {
+font-size: 29rpx;
+font-family: "SimHei";
+color: rgb(153, 153, 153);
+text-align: right;
+}
+.firstClassName-charset {
+font-size: 30rpx;
+font-family: "SimHei";
+color: rgb(51, 51, 51);
+}
+.searchtips-charset{
+font-size: 30rpx;
+font-family: "SimHei";
+color: #c2c2c2;
+position:absolute;
+margin-left:78rpx;
+margin-top:-40rpx;
+}
+.superClass-cell{
+width:210rpx;
+height:80rpx; 
+border-bottom:solid 1rpx white;
+text-align:center;
+align-items:center;
+line-height:80rpx;
+font-size:30rpx;
+font-family: "SimHei";
+color: rgb(51, 51, 51);
+}
+.firstClass-cell{
+display:flex;
+width:527rpx;
+height:80rpx;
+border-bottom:1px solid #f3f3f3;
+align-items:center;
+line-height:80rpx;
+}
+// 搜索框
+.search-box {
+    position:relative;
+    overflow: hidden;
+    width:515rpx;
+    height:66rpx;
+    border-radius: 10rpx;
+    margin-top:12rpx;
+    background:white;
+}
+.search-img {
+    width:515rpx; 
+    height:66rpx;
+    margin-top:-3rpx;
+}
+.search-text {
+    font-size:30rpx;
+    font-family:"SimHei";
+    color:#c2c2c2;
+    position:absolute;
+    top:18.5rpx;
+    left:80rpx;
+}
+</style>

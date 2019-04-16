@@ -1,0 +1,85 @@
+<template>
+    <view class="tab-header" >
+        <view class="tab-each" @tap="changeTab('tab1')">
+            <view class="{{changeTab === 'tab1' ? 'tab-each-text-checked' : 'tab-each-text'}}">学校介绍</view>
+            <view wx:if="{{changeTab === 'tab1'}}" class="tab-each-border"></view>
+        </view>
+        <view class="tab-each" @tap="changeTab('tab2')">
+            <text class="{{changeTab === 'tab2' ? 'tab-each-text-checked' : 'tab-each-text'}}">历年分数</text>
+            <view wx:if="{{changeTab === 'tab2'}}" class="tab-each-border"></view>
+        </view>
+        <view class="tab-each" @tap="changeTab('tab3')">
+            <text class="{{changeTab === 'tab3' ? 'tab-each-text-checked' : 'tab-each-text'}}">专业详情</text>
+            <view wx:if="{{changeTab === 'tab3'}}" class="tab-each-border"></view>
+        </view>
+    </view>
+</template>
+<script>
+import wepy from 'wepy';
+import common from '../mixins/common';
+export default class tab extends wepy.component {
+    data = {
+        changeTab: 'tab1'
+    }
+    props = {
+    }
+    mixins = [
+        common
+    ]
+    methods = {
+        async changeTab (e) {
+            this.changeTab = e;
+            this.$emit('changeTab', e);
+        }
+    }
+    events = {
+        'changeTab': (param) => {
+            this.changeTab = param;
+        }
+    }
+    async onLoad () {
+    }
+}
+</script>
+<style lang="less" scoped>
+.tab-header {
+    display: flex;
+    width:100%;
+    height:90rpx;
+    border-bottom:1rpx solid #e0e0e0;
+}
+.tab-each {
+    width:33%;
+    height:90rpx;
+    text-align: center;
+}
+.tab-each-text-checked {
+    display:inline-block;
+    height:85rpx;
+    padding-left:20rpx;
+    padding-right:20rpx;
+    font-size:30rpx;
+    color:#1fbe79;
+    width:auto;
+    line-height:90rpx;
+    font-weight:bold;
+}
+.tab-each-text {
+    display:inline-block;
+    height:90rpx;
+    padding-left:20rpx;
+    padding-right:20rpx;
+    font-size:30rpx;
+    color:rgb(79,79,79);
+    width:auto;
+    line-height:90rpx;
+    font-weight:bold;
+}
+// new UI
+.tab-each-border {
+    width:40rpx;
+    height:4rpx;
+    margin: 2rpx auto 0;
+    background: #1fbe79;
+}
+</style>

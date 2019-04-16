@@ -1,0 +1,55 @@
+<template>
+    <view class="title">
+        <view class="title-border"></view>
+        <view class="title-text">
+            <slot name="left"></slot>
+        </view>
+        <view class="title-intro">
+            <slot name="right"></slot>
+        </view>
+    </view>
+</template>
+<script>
+import wepy from 'wepy';
+import common from '../../mixins/common';
+export default class titleNew extends wepy.component {
+    data = {
+    }
+    props = {
+    }
+    mixins = [
+        common
+    ]
+    methods = {
+    }
+    async onLoad () {
+    }
+}
+</script>
+<style lang="less" scoped>
+.title {
+    position: relative;
+    display: flex;
+    height: 34rpx;
+    margin: 30rpx;
+    font-weight:bold;
+    &-border {
+        width: 6rpx;
+        height: 32rpx;
+        margin-top: 1rpx;
+        background: #1fbe79;
+    }
+    &-text {
+        margin-left:19rpx;
+        font-size:34rpx;
+        line-height: 34rpx;
+    }
+    &-intro {
+        position: absolute;
+        right: 0rpx;
+        line-height: 34rpx;
+        font-size: 22rpx;
+        color: #a9a9a9;
+    }
+}
+</style>

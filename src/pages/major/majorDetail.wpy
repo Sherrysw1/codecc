@@ -1,0 +1,889 @@
+
+
+<template>
+    <view>
+        <i-spin  wx:if="{{isloaded}}" size="large" fix></i-spin>
+        <view class="main-view" style="width:100%" wx:else>
+        <!--专业头条信息-->
+        <view class="majorInfo-line">
+            <image src="../../resource/img/majorDetial_background.png" style="width:100%; max-height:150rpx;"/>
+            <view class="majorTitle-box">
+                <view class="majorName-charset">{{majorDetail.majorName}}</view>
+                <view class="majorName-tag">
+                    <view class="majorName-tag-item">{{majorDetail.firstClassType}}</view>
+                    <view class="majorName-tag-item">{{majorDetail.majorYear}}制</view>
+                    <view class="majorName-tag-item">{{majorNameInfo1}}</view>
+                    <view class="majorName-tag-item">{{majorNameInfo2}}</view>
+                </view>
+                <view class="to-analysis" @tap="toAnalysis">查看专业解析</view>
+            </view>
+        </view>
+        <!--切换按钮栏目-->
+        <view class="tabs-line">
+            <view class="switch-tab-item {{currentTab==0?'switch-tab-active':''}}" data-current="0" bindtap="clickTab" style="margin-left: 64rpx;">专业介绍
+                <view class="switch-tab-img {{currentTab==0?'switch-tab-img-active':''}}"></view>
+            </view>
+            <view class="switch-tab-item {{currentTab==1?'switch-tab-active':''}}" data-current="1" bindtap="clickTab">开设院校
+                <view class="switch-tab-img {{currentTab==1?'switch-tab-img-active':''}}"></view>
+            </view>
+            <view class="switch-tab-item {{currentTab==2?'switch-tab-active':''}}" data-current="2" bindtap="clickTab" style="margin-right: 66rpx;">就业前景
+                <view class="switch-tab-img {{currentTab==2?'switch-tab-img-active':''}}"></view>
+            </view>
+        </view>
+        <!--详细内容块-->
+        <view class="detail-part-line">
+            <!--详情1：专业简介-->
+            <view  wx:if="{{currentTab == 0}}" class="detail-jianjie">
+            <!-- 专业信息 -->
+            <view class="major-jianjie-info">
+                <view class="major-jianjie-title">专业信息</view>
+                <view class="major-jianjie-content" wx:if="{{buttonisClick&&majorDetail.majorIntro.length>=140}}" style="height:auto;">{{majorDetail.majorIntro}}</view>
+                <view class="major-jianjie-content" wx:if="{{buttonisClick&&majorDetail.majorIntro.length<140}}" style="max-height:299rpx;">{{majorDetail.majorIntro}}</view>
+                <view class="major-jianjie-content" wx:if="{{!buttonisClick&&majorDetail.majorIntro.length>=140}}" style="max-height:299rpx;overflow:hidden;">{{majorDetail.majorIntro}}</view>
+                <view class="major-jianjie-content" wx:if="{{!buttonisClick&&majorDetail.majorIntro.length<140}}" style="height:auto;">{{majorDetail.majorIntro}}</view>
+                <view class="major-jianjie-info-button {{buttonisClick?'buttonHidden':''}}" bindtap="clickInfo" wx:if="{{majorDetail.majorIntro.length>=140}}">展开全部专业信息</view>
+                <view class="major-jianjie-info-button-pack" wx:if="{{buttonisClick}}"  bindtap="clickInfopack">收起全部专业信息</view>       
+            </view>
+                <!-- 主修课程 -->
+                <view class="major-jianjie-course">
+                        <view class="major-jianjie-title" wx:if="{{!buttonisClick&&majorDetail.majorIntro.length>=140}}" style="margin-top: 35rpx">主修课程</view>
+                        <view class="major-jianjie-title" style="55rpx;" wx:else>主修课程</view>
+                        <view class="major-jianjie-content" style="margin-bottom: 63rpx;">{{majorDetail.mainCourse}}</view>
+                </view>
+            </view>
+        <!--详情2：开设院校-->
+            <view  wx:if="{{currentTab == 1}}">
+            <!--选项行-->
+            <view class="item-line">
+                <!--院校地区-->
+                <picker bindchange="changeProvince" value="{{indexProvince}}" range="{{schoolProvinceList}}" class="item-line-picker">
+                <view class="choose-item-schoolProvince">
+                    <view wx:if="{{indexProvince >= 0}}" class="item-charset-schoolProvince">{{schoolProvinceList[indexProvince]}}</view>
+                    <view wx:if="{{indexProvince == -1}}" class="item-charset-schoolProvince">院校地区</view>
+                    <i class="iconfont icon-xiala-" style="weight:19rpx;height:10rpx;margin-top:-22rpx;color:rgba(153, 153, 153, 0.98)"></i>
+                </view>
+                </picker>
+                <!--982/211-->
+                <picker bindchange="changeLevel" value="{{indexLevel}}" range="{{f985items}}" class="item-line-picker">
+                <view class="choose-item-985">
+                    <view wx:if="{{indexLevel>=0}}" class="item-charset-985">{{f985items[indexLevel]}}</view>
+                    <view wx:if="{{indexLevel==-1}}" class="item-charset-985">985/211</view>
+                    <i class="iconfont icon-xiala-" style="weight:19rpx;height:10rpx;margin-top:-22rpx;color:rgba(153, 153, 153, 0.98)"></i>
+                </view>
+                </picker>
+                <!--类别-->
+                <picker bindchange="changeType" value="{{indexType}}" range="{{typeItems}}" class="item-line-picker">
+                <view class="choose-item-type">
+                    <view wx:if="{{indexType>=0}}" class="item-charset">{{typeItems[indexType]}}</view>
+                    <view wx:if="{{indexType==-1}}" class="item-charset">类别</view>
+                    <i class="iconfont icon-xiala-" style="weight:19rpx;height:10rpx;margin-top:-22rpx;color:rgba(153, 153, 153, 0.98)"></i>
+                </view>
+                </picker>
+                <!--分数段-->
+            <picker bindchange="changeScore" value="{{indexScore}}" range="{{scoreItems}}" class="item-line-picker">
+                <view class="choose-item-fenshu">
+                    <view wx:if="{{indexScore>=0}}" class="item-charset">{{scoreItems[indexScore]}}</view>
+                    <view wx:if="{{indexScore==-1}}" class="item-charset">分数段</view>
+                    <i class="iconfont icon-xiala-" style="weight:19rpx;height:10rpx;margin-top:-22rpx;color:rgba(153, 153, 153, 0.98)"></i>
+                </view>
+                </picker>
+            </view>
+            <!--表头-->
+            <view class='list-title-parent'>
+                <view class="list-title-c1">
+                院校名称
+                </view>
+                <view class="list-title-c2">
+                <view class="list-title-c2-sub1">最低录取分数</view>
+                <view class="list-title-c2-sub2">
+                    <view class="list-title-sub">2017</view>
+                    <view class="list-title-sub">2016</view>
+                    <view class="list-title-sub" style="border-right:0rpx">2015</view>
+                </view>
+                </view>
+                <view class="list-title-c3">
+                <view>专业</view><view>排名</view>
+                </view>
+            </view>
+            <!--表内容-->
+            <view class="list-info">
+                <view wx:for="{{schoolInfoList}}" wx:for-index="idx" wx:for-item="school" @tap="superItemClick({{school.collegeName}})" class="school-loop-item">
+                <view class="school-item">
+                    <!-- logo-->
+                    <view class="collegeLogo-inList">
+                    <image class="logoset"  src="{{school.schoolLogo}}"/>
+                    </view>
+                    <!--college info-->
+                    <view class="collegeInfo-inList">
+                    <view class="collegeInfo-inList-nameCell">{{school.collegeName}}</view>
+                    <view class="collegeInfo-inList-infoCell">
+                            <view class="collegeInfo-inList-infoCell-985211">
+                                <view wx:if="{{school.is985}}" style="margin-right:15rpx;">985</view>
+                                <view wx:if="{{school.is211}}" style="margin-right:35rpx;">211</view>
+                            </view>
+                            <view class="collegeInfo-inList-infoCell-stuedent">招生:</view>
+
+                    </view>
+                    </view> 
+                    <!-- fenshu-->
+                    <view class="fenshu-inList">{{school.scoreOfYear.fMin2017 && school.scoreOfYear.fMin2017 !== -1 ? school.scoreOfYear.fMin2017 : '--'}}</view>
+                    <view class="fenshu-inList">{{school.scoreOfYear.fMin2016 && school.scoreOfYear.fMin2016 !== -1 ? school.scoreOfYear.fMin2016 : '--'}}</view>
+                    <view class="fenshu-inList">{{school.scoreOfYear.fMin2015 && school.scoreOfYear.fMin2015 !== -1 ? school.scoreOfYear.fMin2015 : '--'}}</view>
+                    <!--rank-->
+                    <view class="rank-inList">{{school.majorRank === null ? '--' : school.majorRank}}</view>
+                </view>
+                </view>  
+            </view>
+            </view>
+            <!--详情3：就业前景-->
+            <view  wx:if="{{currentTab == 2}}">
+            <!--未来职业 -->
+            <view class="sub-title">
+                <view class="major-jianjie-title">未来职业</view>
+            </view>
+            <view wx:for="{{workPosition}}" wx:for-index="index" wx:for-item="item" class="detail-info-ceil">
+                <view class="detail-info-title">金融分析师</view>
+                <view class="detail-info-msg">{{item}}</view>
+                </view>
+            <!--就业前景-->
+            <view class="sub-title">
+                <view class="major-jianjie-title">就业前景</view>
+            </view>
+            <view class="detail-info-charset-work">{{majorDetail.workProspects}}</view>
+            </view>
+            <!--详情结束-->
+        </view>
+        <!--all line() end-->
+        </view>   
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy';
+import common from '../../mixins/common';
+export default class Index extends wepy.page {
+    config = {
+        navigationBarTitleText: '',
+        'usingComponents': {
+            'i-tabs': '../../iview/tabs/index',
+            'i-tab': '../../iview/tab/index',
+            'i-spin': '../../iview/spin/index'
+        }
+    }
+    components = {
+    }
+    mixins = [
+        common
+    ]
+    data = {
+        // 专业信息请求结果示例
+        // majorDetail:{},
+        isloaded: true,
+        majorDetail: {},
+        indexProvince: -1,
+        indexLevel: -1,
+        indexType: -1,
+        indexScore: 0,
+        f985items: ['不限', '985', '211'],
+        typeItems: ['不限', '综合', '理工', '军事', '农林', '医药', '艺术', '财经', '语言', '民族', '政法', '师范', '体育', 'HND项目', '中外合作办学', '远程教育学院', '普通本科', '成人教育', '高职高专', '独立学院', '其他'],
+        scoreItems: ['分数段', '低于400', '400-500', '500-550', '550-600', '600-650', '650以上'],
+        scoreList: [[0, 750], [0, 400], [400, 500], [500, 550], [550, 600], [600, 650], [650, 750]],
+        currentTab: 0,
+        schoolProvinceList: ['不限地区', '上海', '云南', '内蒙古', '北京', '吉林', '四川', '天津', '宁夏', '安徽', '山东', '山西', '广东', '广西', '新疆', '江苏', '江西', '河北', '河南', '浙江', '海南', '湖北', '湖南', '澳门', '甘肃', '福建', '西藏', '贵州', '辽宁', '重庆', '陕西', '青海', '香港', '黑龙江'],
+        schoolInfoList: [],
+        studentProvince: '',
+        schoolType: '',
+        studentType: '',
+        schoolProvince: '',
+        minScore: 0,
+        maxScore: 750,
+        pageNum: 1,
+        pageSize: 20,
+        lastPage: true,
+        schoolId: -1,
+        is985: 0,
+        is211: 0,
+        majorNameInfo1: '好就业',
+        majorNameInfo2: '有前景',
+        buttonisClick: false,
+        packButtonisClick: false,
+        currentPage: 1,
+        workPosition: []
+    }
+    methods = {
+        /** brief:Tab点击切换
+         *  author:dragon
+         *  detail:如果点击切换到开设院校，需要请求开设院校数据
+         */
+        async clickTab (e) {
+            var self = this;
+            if (self.currentTab === e.target.dataset.current) {
+            }
+            else {
+                console.log(123213, self.mid);
+                self.currentTab = e.target.dataset.current;
+            }
+            self.$apply();
+        },
+        // 点击展开按钮展开内容
+        async clickInfo (e) {
+            let self = this;
+            self.packButtonisClick = false;
+            self.buttonisClick = true;
+            self.$apply();
+        },
+        // 点击收起按钮收起内容
+        async clickInfopack (e) {
+            let self = this;
+            self.packButtonisClick = true;
+            self.buttonisClick = false;
+            self.$apply();
+        },
+        // 下拉框详情：院校地区
+        async changeProvince (e) {
+            var self = this;
+            self.indexProvince = e.detail.value;
+            self.schoolProvince = self.schoolProvinceList[self.indexProvince];
+            await this.requestYear();
+            self.$apply();
+        },
+        // 下拉框-985/211
+        async changeLevel (e) {
+            var self = this;
+            self.indexLevel = parseInt(e.detail.value);
+            if (self.indexLevel === 1) {
+                self.is985 = 1;
+                self.is211 = 0;
+            }
+            if (self.indexLevel === 2) {
+                self.is211 = 1;
+                self.is985 = 0;
+            }
+            await this.requestYear();
+            self.$apply();
+        },
+        // 下拉框-学校类别
+        async changeType (e) {
+            var self = this;
+            self.indexType = e.detail.value;
+            self.schoolType = self.typeItems[self.indexType];
+            await this.requestYear();
+            self.$apply();
+        },
+        // 下拉框-分数段
+        async changeScore (e) {
+            var self = this;
+            self.indexScore = e.detail.value;
+            await this.requestYear();
+            self.$apply();
+        },
+        // 点击先由学校名获取学校id，然后跳转到学校页
+        async superItemClick (param) {
+            var self = this;
+            await this.requestSchool(param);
+            wx.navigateTo({
+                url: '/pages/college/collegeDetail?schoolId=' + self.schoolId + '&schoolName=' + param
+            });
+        },
+        toAnalysis () {
+            wepy.navigateTo({
+                url: '/pages/major/majorStruc'
+            });
+        }
+    }
+    async onLoad(param) {
+        let self = this;
+        self.isloaded = true;
+        await this.requestMajor(param);
+        self.mid = parseInt(param.mid);
+        await this.getDetail();
+        this.requestEnrol();
+        wepy.setNavigationBarTitle({
+            title: `${self.majorDetail.majorName}专业详情`
+        });
+        setTimeout(() => {
+            self.isloaded = false;
+            self.$apply();
+        }, 500);
+        self.$apply();
+    }
+    // 下拉分页
+    async onReachBottom () {
+        console.log('begin push');
+        let self = this;
+        self.pageNum = self.pageNum + 1;
+        console.log(self.pageNum);
+        this.requestEnrol();
+        self.$apply();
+    }
+    // 获取标准专业详情
+    async requestMajor (param) {
+        let self = this;
+        const resMajor = await this.request({
+            url: this.requestUrl + '/gkzywx/majorInfoBake/getMajorInfoByMid.do',
+            data: {
+                'mid': param.mid
+            },
+            method: 'POST'
+        }, false).catch(err => {
+            console.log(err);
+        });
+        if (resMajor.status === 0) {
+            self.majorDetail = resMajor.data;
+            self.majorDetail.firstClassType = self.majorDetail.firstClassType.slice(0, -1);
+            console.log(self.majorDetail);
+            self.workPosition.push(self.majorDetail.workPosition);
+            self.$apply();
+        }
+    }
+    // 获取学校id
+    async requestSchool (param) {
+        let self = this;
+        const resSchool = await this.request({
+            url: this.requestUrl + '/gkzywx/collegeInfo/getSchoolIdByName.do',
+            data: {
+                'schoolName': param
+            },
+            method: 'POST'
+        }, false).catch(err => {
+            console.log(err);
+        });
+        console.log(resSchool);
+        if (resSchool.status === 0) {
+            self.schoolId = resSchool.data;
+            self.$apply();
+        }
+    }
+    async getDetail () {
+        let self = this;
+        self.globalData = this.$parent.globalData;
+        console.log('globalData', self.globalData);
+        self.studentProvince = self.globalData.userInfoFromServer.studentProvince;
+        self.studentType = self.globalData.userInfoFromServer.studentType;
+        self.$apply();
+    }
+    async requestYear () {
+        let self = this;
+        const resEnroll = await this.request({
+            url: this.requestUrl + '/gkzywx/majorEnrollBake/getEnrollByMidWithFilterv2.do',
+            data: {
+                'mid': self.mid,
+                'studentProvince': self.studentProvince,
+                'studentType': self.studentType,
+                'schoolProvince': parseInt(self.indexProvince) === -1 || parseInt(self.indexProvince) === 0 ? undefined : self.schoolProvince,
+                'is985': parseInt(self.is985) === 1 ? 1 : undefined,
+                'is211': parseInt(self.is211) === 1 ? 1 : undefined,
+                'schoolType': parseInt(self.indexType) === -1 || parseInt(self.indexType) === 0 ? undefined : self.schoolType,
+                'minScore': self.scoreList[self.indexScore][0],
+                'maxScore': self.scoreList[self.indexScore][1],
+                'pageNum': self.page,
+                'pageSize': self.pageSize
+            },
+            method: 'POST'
+        }, false).catch(err => {
+            console.log(err);
+        });
+        if (resEnroll.status === 0 && resEnroll.data.collegeList !== null) {
+            self.schoolInfoList = resEnroll.data.collegeList;
+            self.schoolInfoList.forEach(college => {
+                college.schoolLogo = `https://gkzy-1258109256.cos.ap-beijing.myqcloud.com/school-logo/${college.schoolLogo}`;
+            });
+            self.$apply();
+        }
+    }
+    async requestEnrol () {
+        let self = this;
+        const resEnroll = await this.request({
+            url: this.requestUrl + '/gkzywx/majorEnrollBake/getEnrollByMidWithFilterv2.do',
+            data: {
+                'mid': self.mid,
+                'studentProvince': self.studentProvince,
+                'studentType': self.studentType,
+                'schoolProvince': parseInt(self.indexProvince) === -1 || parseInt(self.indexProvince) === 0 ? undefined : self.schoolProvince,
+                'is985': parseInt(self.is985) === 1 ? 1 : undefined,
+                'is211': parseInt(self.is211) === 1 ? 1 : undefined,
+                'schoolType': parseInt(self.indexType) === -1 || parseInt(self.indexType) === 0 ? undefined : self.schoolType,
+                'minScore': self.scoreList[self.indexScore][0],
+                'maxScore': self.scoreList[self.indexScore][1],
+                'pageNum': self.pageNum,
+                'pageSize': self.pageSize
+            },
+            method: 'POST'
+        }, false).catch(err => {
+            console.log(err);
+        });
+        if (resEnroll.status === 0 && resEnroll.data.collegeList !== null) {
+            resEnroll.data.collegeList.forEach(item => {
+                self.schoolInfoList.push(item);
+                item.schoolLogo = `https://gkzy-1258109256.cos.ap-beijing.myqcloud.com/school-logo/${item.schoolLogo}`;
+            });
+        }
+        self.$apply();
+    }
+}
+</script>
+<style lang="less" scoped>
+// 总盒子
+.main-view{
+    width: 100%;
+    height: 100%;
+}
+// 专业头条信息
+.majorInfo-line{
+    width: 750rpx;
+    height: 150rpx;
+    position: relative;
+}
+// 标题栏 绝对定位
+.majorTitle-box{
+    position: absolute;
+    box-sizing: border-box;
+    top: 76rpx;
+    left: 28rpx;
+    width: 690rpx;
+    height: 160rpx;
+    padding: 37rpx 0rpx 31rpx 35rpx;    
+	background-color: #ffffff;
+	box-shadow: 0rpx 5rpx 20rpx 0rpx rgba(222, 225, 231, 0.7);
+    border-radius: 10rpx;
+}
+.majorName-charset{
+    width: 100%;
+    height: 32rpx;
+	font-family: "PingFangSC-Semibold";
+	font-size: 32rpx;
+	font-weight: normal;
+	font-stretch: normal;
+	color: #333333;
+}
+// 标题栏底下的标签
+.majorName-tag{
+    width: 100%;
+    height: 40rpx;
+    margin-top: 16rpx;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+.majorName-tag-item{
+    height: 40rpx;
+    margin-right: 11rpx;
+    margin-top: 6rpx;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    padding: 0rpx 17rpx;
+    background-color: #ffa312;
+    border-radius: 6rpx;
+    font-family: "PingFangSC-Regular";
+	font-size: 22rpx;
+	font-weight: normal;
+	font-stretch: normal;
+	color: #ffffff;
+}
+// 点击选项
+.tabs-line{
+    height: 204rpx;
+    border-bottom: 1rpx solid #eeeeee;
+    display: flex;
+    width: 100%;
+}
+.switch-tab-item{
+    height: 29rpx;
+    display: inline-block;
+    margin: 141rpx 66rpx 22rpx 65rpx;
+    border-radius: 2rpx;
+	font-family: "PingFangSC-Semibold";
+	font-size: 30rpx;
+	font-weight: normal;
+	font-stretch: normal;
+}
+// 点击选项底下的选中标志
+.switch-tab-img{
+    height: 4rpx;
+    width: 40rpx;
+    margin-left: 40rpx;
+    margin-top: 22rpx;
+    border-radius: 2rpx;
+}
+.switch-tab-active{
+    color: #1fbe79;
+}
+.switch-tab-img-active{
+    background: #1fbe79;
+}
+.detail-part-line{
+    display: flex;
+}
+//简介详情模块
+.detail-jianjie{
+    display: flex;
+    flex-direction: column;
+}
+//小标题行
+.major-jianjie-title{
+    width: 159rpx;
+    height: 33rpx;
+    box-sizing: border-box;
+    margin-top: 59rpx;
+    margin-left: 30rpx;
+    border-left: 6rpx solid #1fbe79;
+    padding-left: 19rpx;
+    font-family: "PingFangSC-Semibold";
+    font-size: 33rpx;
+    line-height: 33rpx;
+	font-weight: normal;
+	font-stretch: normal;
+	letter-spacing: 0rpx;
+	color: #333333;
+  }
+//内容（eg.主干课程）
+.major-jianjie-content{
+    width: 691rpx;
+    // max-height: 299rpx;
+    margin-left: 30rpx;
+    margin-top: 31rpx;
+    overflow: hidden;
+    font-family: "PingFangSC-Regular";
+	font-size: 30rpx;
+	font-weight: normal;
+	font-stretch: normal;
+	line-height: 45rpx;
+    color: #333333;
+}
+// 简介详情 点击展开按钮
+  .major-jianjie-info-button{
+    width: 687rpx;
+    height: 80rpx;
+    top: -20rpx;
+    position: relative;
+    background-color: #ffffff;
+    box-shadow:0rpx -50rpx 60rpx #ffffff;
+    border-radius: 6rpx;
+    margin-left: 30rpx;
+    border: solid 2rpx #1fbe79;
+    text-align: center;
+	font-family: "PingFangSC-Regular";
+	font-size: 30rpx;
+	font-weight: normal;
+	font-stretch: normal;
+	line-height: 80rpx;
+	color: #1fbe79;
+}
+    // 简介详情 点击收起按钮
+.major-jianjie-info-button-pack{
+    width: 687rpx;
+    height: 80rpx;
+    margin-top: 31rpx;
+    background-color: #ffffff;
+    box-shadow:0rpx -50rpx 60rpx #ffffff;
+    border-radius: 6rpx;
+    margin-left: 30rpx;
+    border: solid 2rpx #1fbe79;
+    text-align: center;
+	font-family: "PingFangSC-Regular";
+	font-size: 30rpx;
+	font-weight: normal;
+	font-stretch: normal;
+	line-height: 80rpx;
+	color: #1fbe79;
+}
+// 按钮隐藏
+  .buttonHidden{
+    display: none;
+  }
+  //子页2-招生院校模块
+  .detail-yuanxiao{
+    display:flex;
+    flex-direction: column;
+  }
+  //选项行
+  .item-line{
+    display:flex;
+    flex-direction:row;
+    height:73rpx;
+    width:100%;
+  }
+  //选项行-picker（包含一个选项框）
+  .item-line-picker{
+    display:flex;
+    height:73rpx;
+    width:100%;
+    align-items:center;
+    justify-content: center;
+  }
+  //选项框:院校地区（字体+icon）
+  .choose-item-schoolProvince{
+    display:flex;
+    flex-direction: row;
+    align-items:center;
+    font-size:25rpx;
+    color:#333333;
+  }
+    //院校地区字体区域设置
+  .item-charset-schoolProvince{
+    font-size:25rpx;
+    color:#333333;
+    text-align:center;
+    line-height:73rpx;
+    align-items:center;
+  }
+  //选项框:985/211（字体+icon）
+  .choose-item-985{
+    color:#333333;
+    display:flex;
+    flex-direction: row;
+    align-items:center;
+  }
+   //985/211字体区域设置
+  .item-charset-985{
+    font-size:25rpx;
+    color:#333333;
+    text-align:center;
+    line-height:73rpx;
+    align-items:center;
+  }
+  //选项框：类别
+  .choose-item-type{
+    display:flex;
+    flex-direction: row;
+    color:#333333;
+    align-items:center;
+  }
+  //选项框：分数段
+  .choose-item-fenshu{
+    display:flex;
+    flex-direction: row;
+    color:#333333;
+    align-items:center;
+  }
+  //选项字体设置
+  .item-charset{
+    font-size:25rpx;
+    color:#333333;
+  }
+  //招生院校列表表头
+  .list-title-parent{
+    display:flex;
+    flex-direction: row;
+    height: 81rpx;
+    width:100%;
+    background-color: #efefef;
+    border-top: solid 1.5px #e7e7e7;
+    border-bottom: solid 1.5px #e7e7e7;
+  }
+  //招生院校列表表头-院校名称
+  .list-title-c1{
+    font-size:30rpx;
+    width:385rpx;
+    border-right:solid 1.5px #e7e7e7;
+    text-align: center;
+    align-items: center;
+    line-height:82rpx;
+    color:#4f4f4f;
+  }
+    //招生院校列表表头-分数线
+  .list-title-c2{
+    display: flex;
+    flex-direction: column;
+    width:279rpx;
+    border-right:solid 1.5px #e7e7e7;
+  }
+  //最低录取分数线
+  .list-title-c2-sub1{
+    font-size:30rpx;
+    width:279rpx;
+    text-align: center;
+    align-items: center;
+    line-height:41rpx;
+    color:#4f4f4f;
+  }
+  //2016+2017+2018
+  .list-title-c2-sub2{
+    display:flex;
+    flex-direction: row;
+    font-size:30rpx;
+    width:279rpx;
+    border-top:solid 1.5px #e7e7e7;
+    text-align: center;
+    align-items: center;
+    line-height:41rpx;
+    color:#4f4f4f;
+  }
+  .list-title-sub{
+    font-size:30rpx;
+    width:94rpx;
+    border-right:solid 1.5px #e7e7e7;
+    text-align: center;
+    align-items: center;
+    line-height:41rpx;
+    color:#4f4f4f;
+  }
+  //招生院校列表表头-专业排名
+  .list-title-c3{
+    font-size:30rpx;
+    width:85rpx;
+    text-align: center;
+    align-items: center;
+    line-height:41rpx;
+    color:#4f4f4f;
+  }
+  //招生院校列表整体
+  .list-info{
+    display:flex;
+    flex-direction: column;
+    width:100%;
+  }
+  //一条院校信息
+  .school-loop-item{
+    display:flex;
+    flex-direction: row;
+    height:125rpx;
+    border-bottom: solid 1.5rpx #e7e7e7;
+  }
+  .school-item{
+    display:flex;
+    flex-direction: row;
+    height:125rpx;
+    border-bottom: solid 1.5rpx #e7e7e7;
+  }
+  //招生列表中：校徽方块
+  .collegeLogo-inList{
+    display:flex;
+    width:133rpx;
+    height:125rpx;
+  }
+  //校徽带澳
+  .logoset{
+    width:82rpx; 
+    height:82rpx;
+    margin-top: 21rpx;
+    margin-left:26rpx;
+  }
+  //招生列表中：学校信息块
+  .collegeInfo-inList{
+    display:flex;
+    flex-direction: column;
+    width:253rpx;
+    height:125rpx;
+    border-right: solid 1.5rpx #e7e7e7;
+  }
+  //招生列表中：学校信息块->上层大学姓名
+  .collegeInfo-inList-nameCell{
+    width:230rpx;
+    height:66rpx;
+    font-size:30rpx;
+    color:#4f4f4f;
+    border-bottom: solid 1.5rpx #e7e7e7;
+    align-items:center;
+    text-align:center;
+    line-height:66rpx;
+    overflow:hidden;
+  }
+  //招生列表中：学校信息块->下层大学信息
+  .collegeInfo-inList-infoCell{
+    display:flex;
+    flex-direction: row;
+    width:210rpx;
+    height:59rpx;
+    font-size: 23rpx;
+    color:#4f4f4f;
+    line-height:59rpx;
+    align-content: center;
+	  font-family: "SimHei";
+	  font-weight: normal;
+  }
+  //招生列表中：分数块
+  .fenshu-inList{
+    display:flex;
+    width:93rpx;
+    border-right: solid 1.5rpx #e7e7e7;
+    align-items:center;
+    height:125rpx;
+    font-size:30rpx;
+    color:#4f4f4f;
+    justify-content:center;
+  }
+  //招生列表中：专业排名块
+  .rank-inList{
+    display: flex;
+    width:85rpx;
+    align-items:center;
+    height:125rpx;
+    font-size:30rpx;
+    color:#3eb58f;
+    font-weight:bold;
+    justify-content:center;
+  }
+  .detail-jiuye{
+    display:flex;
+  }
+  // 大学信息
+  .collegeInfo-inList-infoCell-985211{
+    display: flex;
+    max-width: 50%;
+  }
+  // 未来职业展示每项
+  .detail-info-ceil{
+    display: flex;
+    flex-direction: column;
+    width: 689rpx;
+    margin-right: 31rpx;
+    margin-left: 30rpx;
+    margin-top: 27rpx;
+    margin-bottom: 25rpx;
+    background-color: #ffffff;
+	  box-shadow: 0rpx 5rpx 20rpx 0rpx rgba(222, 225, 231, 0.7);
+	  border-radius: 6px;
+  }
+  .detail-info-title{
+    width: 100%;
+	  height: 30rpx;
+	  font-family: "PingFangSC-Semibold";
+	  font-size: 30rpx;
+	  font-weight: normal;
+	  line-height: 45rpx;
+    color: #333333;
+    margin-top: 29rpx;
+    margin-left: 29rpx;
+  }
+  .detail-info-msg{
+    width: 623rpx;
+	  font-family: "PingFangSC-Regular";
+	  font-size: 24rpx;
+	  font-weight: normal;
+	  line-height: 30rpx;
+    color: #a9a9a9;
+    margin-left: 30rpx;
+    margin-bottom: 29rpx;
+    margin-right: 36rpx;
+    margin-top: 13rpx;
+  }
+  .detail-info-charset-work{
+    display: flex;
+    width: 691rpx;
+	  font-family: "PingFangSC-Regular";
+	  font-size: 30rpx;
+	  font-weight: normal;
+	  line-height: 45rpx;
+    color: #4f4f4f;
+    margin-left: 31rpx;
+    margin-top: 33rpx;
+    margin-right: 28rpx;
+    margin-bottom: 97rpx;
+  }
+.to-analysis{
+    position: absolute;
+    bottom:20rpx;
+    right: 20rpx;
+    width: 167rpx;
+    height: 49rpx;
+    line-height: 49rpx;
+    font-size: 24rpx;
+    color: white;
+    background: rgb(64,208,145);
+    text-align: center;
+    box-shadow: 0 0 5rpx rgb(31,190,121);
+    border-radius: 6rpx;
+}
+</style>

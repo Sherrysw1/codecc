@@ -1,0 +1,54 @@
+<template>
+    <view class="search-line" @tap="toSearchPage">
+        <image class="search-line-img" src="../../resource/img/collegeMain_search_back.png"/>  
+        <view class="search-line-input"> 搜索院校</view>
+    </view>
+</template>
+<script>
+import wepy from 'wepy';
+import common from '../../mixins/common';
+export default class searchCollege extends wepy.component {
+    data = {
+    }
+    props = {
+    }
+    mixins = [
+        common
+    ]
+    methods = {
+        toSearchPage (e) {
+            wepy.navigateTo({
+                url: '/pages/college/collegeSearch'
+            });
+        }
+    }
+    async onLoad () {
+        let self = this;
+        self.$apply();
+    }
+}
+</script>
+<style lang="less" scoped>
+//搜索框
+.search-line {
+    position: relative;
+    width:691rpx;
+    height:67rpx;
+    margin:10rpx auto 0;
+}
+.search-line-img {
+    width:100%;
+    height:100%;
+}
+.search-line-input {
+    top:3.5rpx;
+    width:600rpx;
+    height:60rpx;
+    position:absolute;
+    left:100rpx;
+    font-size:24rpx;
+    line-height:60rpx;
+    color:#bababa;
+    letter-spacing:5rpx;
+}
+</style>

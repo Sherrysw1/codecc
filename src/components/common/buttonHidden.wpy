@@ -1,0 +1,60 @@
+<template>
+    <view>
+        <view class="introduction" style="height:{{introSignal ? 'auto' : '265rpx'}}">
+            <!-- <text>{{collegeInfoDetail.schoolintro}}</text> -->
+            <slot></slot>
+            <view wx:if="{{!introSignal}}" class="introduction-shadow"></view>
+        </view>
+        <view class="introduction-button" @tap="moreInfo">{{introSignal ? '收起全部内容' : '展开全部内容'}}</view>
+    </view>
+</template>
+<script>
+import wepy from 'wepy';
+import common from '../../mixins/common';
+export default class buttonHidden extends wepy.component {
+    data = {
+        introSignal: false
+    }
+    props = {
+    }
+    mixins = [
+        common
+    ]
+    methods = {
+        async moreInfo () {
+            this.introSignal = !this.introSignal;
+        }
+    }
+    async onLoad () {
+    }
+}
+</script>
+<style lang="less" scoped>
+.introduction{
+    position: relative;
+    margin: 38rpx auto;
+    width:690rpx;
+    overflow: hidden;
+    font-size: 30rpx;
+    line-height: 44rpx;
+    color: #333333;
+    &-shadow {
+        position: absolute;
+        bottom: 0;
+        width:690rpx;
+        height: 200rpx;
+        background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1))
+    }
+}
+.introduction-button {
+    width: 690rpx;
+    height: 80rpx;
+    margin: 14rpx auto 0;
+    border: 1rpx solid #1fbe79;
+    font-size: 30rpx;
+    line-height: 80rpx;
+    text-align: center;
+    color: #1fbe79;
+    border-radius: 6rpx;
+}
+</style>

@@ -1,0 +1,144 @@
+<style lang="less" src='./style/iconfont.less'>
+.container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+</style>
+<script>
+import wepy from 'wepy';
+import 'wepy-async-function';
+import { setStore } from 'wepy-redux';
+import configStore from './store';
+const store = configStore();
+setStore(store);
+export default class extends wepy.app {
+    config = {
+        pages: [
+            'pages/major/majorIndividual',
+            'pages/major/majorNewDetail',
+            'pages/index',
+            'pages/testParse',
+            'pages/major/majorStruc',
+            'pages/personInfo',
+            'pages/majorMain',
+            'pages/major/majorList',
+            'pages/major/majorDetail',
+            'pages/major/majorSearch',
+            'pages/collegeMain',
+            'pages/college/collegeResult',
+            'pages/college/collegeSearch',
+            'pages/college/collegeDetail',
+            'pages/predictCollege',
+            'pages/predict/predictOneCollege',
+            'pages/testCollege'
+        ],
+        window: {
+            backgroundTextStyle: 'light',
+            navigationBarBackgroundColor: '#fff',
+            navigationBarTitleText: 'WeChat',
+            navigationBarTextStyle: 'black'
+        }
+    }
+    mixins = []
+    globalData = {
+        userInfo: null,
+        requestUrl: 'https://test.dykt123.com',
+        registInfo: false,
+        openId: '',
+        unionId: '',
+        sessionId: '',
+        userInfoFromServer: null,
+        studentTypeSignal: false,
+        studentScoreSignal: false
+    }
+    // 服务器中保存的用户的信息，如果有更新个人信息，请更新该字段，从getDetail接口获取最新用户信息
+    /** dataFromServer 包含以下信息
+     * avatarUrl: 用户头像
+     * country: 国家
+     * city: 城市
+     * gender: 微信提供的用户性别
+     * id: 用户id
+     * nickeName: 微信昵称
+     * province： 微信提供的省份
+     * phone: 手机号
+     * preferCollege: 偏好学校
+     * preferMajor： 偏好专业
+     * studentProvince： 学生省份
+     * studentScore: 学生分数
+     * studentType: 文理科
+     * studentyear：高考年份
+     */
+    dataFromServer = {
+    }
+    constructor () {
+        super();
+        this.use('requestfix');
+        this.use('promisify');
+    }
+    async onLaunch() {
+        var self = this;
+        // 登录
+        const resLogin = await wepy.login();
+        const res = await wepy.request({
+            url: self.globalData.requestUrl + '/gkzywx/wxUser/wxLogin.do',
+            method: 'POST',
+            header: {
+                'content-type': 'application/json',
+                'cookie': 'JSESSIONID=' + self.globalData.sessionId
+            },
+            data: {
+                'jsCode': resLogin.code
+            }
+        }, false).catch(err => {
+            console.log(err);
+        });
+        if (res.data.status === 0) {
+            self.globalData.registInfo = true;
+            self.globalData.openId = res.data.data.openId;
+            self.globalData.sessionId = res.data.data.sessionId;
+            const resUser = await wepy.request({
+                url: self.globalData.requestUrl + '/gkzywx/wxUser/getWxUserDetail.do',
+                method: 'POST',
+                header: {
+                    'content-type': 'application/json',
+                    'cookie': 'JSESSIONID=' + self.globalData.sessionId
+                },
+                data: {
+                }
+            }, false).catch(err => {
+                console.log(err);
+            });
+            if (resUser.data.status === 0) {
+                self.dataFromServer = resUser.data.data;
+                self.globalData.userInfoFromServer = resUser.data.data;
+                if (resUser.data.data.studentType !== '--') {
+                    self.globalData.studentTypeSignal = true;
+                }
+                if (resUser.data.data.studentScore !== -1) {
+                    self.globalData.studentScoreSignal = true;
+                }
+            }
+        }
+        else {
+            self.globalData.openId = res.data.data.openId;
+            self.globalData.sessionId = res.data.data.sessionId;
+            if (res.data.status === 5) {
+                self.globalData.registInfo = false;
+            }
+        }
+    }
+    async getUserInfo(cb) {
+        const that = this;
+        if (this.globalData.userInfo) {
+            return this.globalData.userInfo;
+        }
+        const res = await wepy.getUserInfo();
+        that.globalData.userInfo = res.userInfo;
+        cb && cb(res.userInfo);
+    }
+}
+</script>

@@ -1,0 +1,373 @@
+<template> 
+    <view class="window-main">        
+      <view class="background">
+        <view class="person-header">
+        </view> 
+        <view class="person-box">
+            <image class="avatar" src="{{avatarUrl}}"/>
+            <view class="nick-name">{{nickName}}</view>
+            <view class="mobile">{{mobile}}</view>
+        </view>
+        <view class="personInfo">
+          <view class="person-item">
+            <image class="person-icon-position" src="../resource/img/person_position.png"/>
+            <view class="position-title">
+              高考地区
+            </view>
+            <picker class="position-select" range="{{provinceList}}" value="{{provinceIndex}}" bindchange="provinceChange">
+              <text style="margin-right:-50rpx">{{provinceList[provinceIndex]}}</text>
+              <image class="position-select-img" src="../resource/img/person_down.png"/>
+            </picker>
+          </view>
+          <view class="person-item">
+            <image class="person-icon-subject" src="../resource/img/person_subject.png"/>
+            <view class="position-title" style="margin-left:13.5rpx;">
+              高考科目
+            </view>
+            <picker class="position-select" range="{{subjectList}}" value="{{subjectIndex}}" bindchange="subjectChange">
+                <text style="margin-right:-50rpx">{{subjectList[subjectIndex]}}</text>
+              <image class="position-select-img" src="../resource/img/person_down.png"/>
+            </picker>
+          </view>
+          <view class="person-item">
+            <image class="person-icon-score" src="../resource/img/person_score.png" />
+            <view class="position-title" style="margin-left:17rpx;">
+              我的分数
+            </view>
+            <input class="position-select" placeholder="请输入分数" bindblur="scoreChange" type="number" value="{{score}}"/>
+          </view>
+          <view class="person-item">
+            <image class="person-icon-major" src="../resource/img/person_major.png"/>
+            <view class="position-title" style="margin-left:15rpx;">
+              偏好专业
+            </view>
+            <input class="position-select" placeholder="请输入专业" bindblur="majorChange"/>
+          </view>
+          <view class="person-item">
+            <image class="person-icon-college" src="../resource/img/person_college.png"/>
+            <view class="position-title" style="margin-left:11.5rpx;">
+              理想院校
+            </view>
+            <input class="position-select" placeholder="请输入院校" bindblur="collegeChange"/>
+          </view>
+        </view>
+        <form>
+          <button class="person-button" @tap="updateInfo">
+            确认修改
+          </button>
+        </form>
+        <view class="person-tip">
+          优化信息为您提供更精准的服务
+        </view>
+      </view>   
+      <i-toast id="toast" />      
+    </view>
+</template>
+<script>
+const { $Toast } = require('../iview/base/index');
+import wepy from 'wepy';
+import common from '../mixins/common';
+export default class collegeMain extends wepy.page {
+    config = {
+        navigationBarTitleText: '个人中心',
+        usingComponents: {
+            'i-tabs': '../iview/tabs/index',
+            'i-tab': '../iview/tab/index',
+            'i-toast': '../iview/toast/index'
+        }
+    }
+    components = {}
+    mixins = [
+        common
+    ]
+    data = {
+        avatarUrl: '',
+        searchValue: '',
+        nickName: '',
+        provinceList: ['请选择地区', '安徽', '澳门', '北京', '重庆', '福建', '甘肃', '广东', '广西', '贵州', '海南', '河北', '河南', '黑龙江', '湖北', '湖南', '吉林', '江苏', '江西', '辽宁', '内蒙古', '宁夏', '青海', '山东', '山西', '陕西', '上海', '四川', '台湾', '天津', '西藏', '香港', '新疆', '云南', '浙江'],
+        subjectList: ['请选择科目', '文科', '理科'],
+        provinceIndex: 0,
+        subjectIndex: 0,
+        score: '',
+        major: '',
+        college: '',
+        mobile: '',
+        lastPageUrl: '',
+        changeSignal: false
+    }
+    computed = {}
+    methods = {
+        provinceChange (e) {
+            var self = this;
+            self.provinceIndex = e.detail.value;
+            self.$apply();
+        },
+        subjectChange (e) {
+            var self = this;
+            self.subjectIndex = e.detail.value;
+            self.$apply();
+        },
+        scoreChange (e) {
+            var self = this;
+            self.score = e.detail.value;
+            self.$apply();
+        },
+        majorChange (e) {
+            var self = this;
+            self.major = e.detail.value;
+            self.$apply();
+        },
+        collegeChange (e) {
+            var self = this;
+            self.college = e.detail.value;
+            self.$apply();
+        },
+        async updateInfo () {
+            var self = this;
+            const resPerson = await this.request({
+                url: self.requestUrl + '/gkzywx/wxUser/updateWxUserStuInfo.do',
+                method: 'POST',
+                header: {
+                    'content-type': 'application/json',
+                    'cookie': 'JSESSIONID=' + this.$parent.globalData.sessionId
+                },
+                data: {
+                    id: this.$parent.globalData.userInfoFromServer.id,
+                    studentProvince: self.provinceList[self.provinceIndex],
+                    studentScore: self.score,
+                    studentType: self.subjectList[self.subjectIndex],
+                    preferMajor: self.major === '' ? '--' : self.major,
+                    preferCollege: self.college === '' ? '--' : self.college
+                }
+            }, false).catch(err => {
+                console.log(err);
+            });
+            if (resPerson.status === 0) {
+                $Toast({
+                    content: resPerson.msg,
+                    type: 'success'
+                });
+                this.changeSignal = true;
+                this.getUserFromServer();
+                setTimeout(async () => {
+                    wepy.redirectTo({
+                        url: self.lastPageUrl
+                    });
+                }, 500);
+            }
+            else {
+                $Toast({
+                    content: resPerson.msg,
+                    type: 'error'
+                });
+            }
+        }
+    }
+    events = {}
+    async onLoad (param) {
+        let self = this;
+        self.requestUrl = this.$parent.globalData.requestUrl;
+        self.globalData = this.$parent.globalData;
+        self.avatarUrl = self.globalData.userInfoFromServer.avatarUrl;
+        self.nickName = self.globalData.userInfoFromServer.nickName;
+        self.mobile = self.globalData.userInfoFromServer.phone;
+        self.lastPageUrl = param.currentUrl;
+        this.getUserInfo();
+        self.$apply();
+    }
+    onUnload () {
+        if (!this.changeSignal) {
+            wepy.navigateTo({
+                url: this.lastPageUrl
+            });
+        }
+    }
+    async getUserInfo () {
+        let self = this;
+        let provinceId = 0;
+        self.provinceList.forEach(function(province) {
+            if (province === self.globalData.userInfoFromServer.studentProvince) {
+                self.provinceIndex = provinceId;
+            }
+            else {
+                provinceId++;
+            }
+        });
+        let subjectId = 0;
+        self.subjectList.forEach(function(subject) {
+            if (subject === self.globalData.userInfoFromServer.studentType) {
+                self.subjectIndex = subjectId;
+            }
+            else {
+                subjectId++;
+            }
+        });
+        self.globalData.userInfoFromServer.studentScore === -1 ? self.score = '' : self.score = self.globalData.userInfoFromServer.studentScore;
+        self.globalData.userInfoFromServer.preferMajor === '--' ? self.major = '' : self.major = self.globalData.userInfoFromServer.preferMajor;
+        self.globalData.userInfoFromServer.preferCollege === '--' ? self.college = '' : self.college = self.globalData.userInfoFromServer.preferCollege;
+        self.$apply();
+    }
+    async getLastPage() {
+        let pages = getCurrentPages();
+        let lastPage = pages[pages.length - 2].route;
+        return `/${lastPage}`;
+    }
+    async getUserFromServer () {
+        const resUser = await wepy.request({
+            url: this.requestUrl + '/gkzywx/wxUser/getWxUserDetail.do',
+            method: 'POST',
+            header: {
+                'content-type': 'application/json',
+                'cookie': 'JSESSIONID=' + this.globalData.sessionId
+            },
+            data: {
+            }
+        }, false).catch(err => {
+            console.log(err);
+        });
+        if (resUser.data.status === 0) {
+            this.$parent.dataFromServer = resUser.data.data;
+            this.$parent.globalData.userInfoFromServer = resUser.data.data;
+        }
+        else {
+            $Toast({
+                content: resUser.msg,
+                type: 'error'
+            });
+        }
+    }
+}
+</script>
+<style lang="less" scoped> 
+.window-main {
+    width:100%;
+}
+.person-header {
+    width:750rpx;
+    height:158rpx;
+    background: linear-gradient(to right, #1fbe79, #16ab6a)
+}
+.person-box {
+    width:698rpx;
+    height:244rpx;
+    margin:auto;
+    margin-top:-70rpx;
+    background:white;
+    border-radius:20rpx;
+    text-align:center;
+}
+.avatar {
+    width:146rpx;
+    height:146rpx;
+    margin:auto;
+    margin-top:-60rpx;
+    border-radius: 73rpx;
+}
+.nick-name {
+    margin-top:20rpx;
+    font-size:32rpx;
+    color:#333333;
+}
+.mobile {
+  margin-top:20rpx;
+  font-size:32rpx;
+}
+.background {
+  width:100%;
+  height:100%;
+  background:#f7f7f7;
+  position:absolute;
+}
+// 个人信息修改
+.personInfo {
+  width:698rpx;
+  height:580rpx;
+  margin:30rpx auto 0;
+  background:white;
+  border-radius: 20rpx;
+  padding-top:20rpx;
+}
+// 每一个item
+.person-item {
+  width:100%;
+  height:60rpx;
+  margin-top:40rpx;
+  display:flex;
+}
+.position-title {
+  line-height:60rpx;
+  font-size:30rpx;
+  margin-left:18rpx;
+  color:#4f4f4f;
+  letter-spacing: 3rpx;
+}
+.position-select {
+  width:371rpx;
+  height:60rpx;
+  margin-left:60rpx;
+  border-radius: 10rpx;
+  background:#eeeeee;
+  font-size:28rpx;
+  line-height:60rpx;
+  color:rgb(51,51,51);
+  letter-spacing: 2rpx;
+  text-align:center;
+}
+.position-select-img {
+  width:23rpx;
+  height:13rpx;
+  margin-top:23.5rpx;
+  float:right;
+  margin-right:20rpx;
+}
+.person-icon-position {
+  width:30rpx;
+  height:44rpx;
+  margin-top:8rpx;
+  margin-left:50rpx;
+}
+.person-icon-subject {
+  width:39rpx;
+  height:38rpx;
+  margin-top:11rpx;
+  margin-left:45.5rpx;
+}
+.person-icon-score {
+  width:32rpx;
+  height:38rpx;
+  margin-top:11rpx;
+  margin-left:49rpx;
+}
+.person-icon-major {
+  width:36rpx;
+  height:41rpx;
+  margin-top:9.5rpx;
+  margin-left:47rpx;
+}
+.person-icon-college {
+  width:43rpx;
+  height:39rpx;
+  margin-top:10.5rpx;
+  margin-left:43.5rpx;
+}
+// 确认修改按钮
+.person-button {
+  width:700rpx;
+  height:83rpx;
+  border-radius: 10rpx;
+  background:#1fbe79;
+  margin:45rpx auto 0;
+  text-align:center;
+  color:white;
+  font-size:32rpx;
+  line-height:83rpx;
+  letter-spacing: 5rpx;
+}
+.person-tip {
+  width:100%;
+  font-size:30rpx;
+  margin-top:25rpx;
+  color:#999999;
+  text-align: center;
+}
+</style>

@@ -1,0 +1,46 @@
+<template>
+    <view class="title">
+        <view class="title-border"></view>
+        <view class="title-text">
+            <slot></slot>
+        </view>
+    </view>
+</template>
+<script>
+import wepy from 'wepy';
+import common from '../../mixins/common';
+export default class title extends wepy.component {
+    data = {
+    }
+    props = {
+    }
+    mixins = [
+        common
+    ]
+    methods = {
+    }
+    async onLoad () {
+    }
+}
+</script>
+<style lang="less" scoped>
+.title {
+    display: flex;
+    height: 34rpx;
+    margin-top:30rpx;
+    margin-left: 30rpx;
+    margin-bottom:30rpx;
+    font-weight:bold;
+    &-border {
+        width: 6rpx;
+        height: 32rpx;
+        margin-top: 1rpx;
+        background: #1fbe79;
+    }
+    &-text {
+        margin-left:19rpx;
+        font-size:34rpx;
+        line-height: 34rpx;
+    }
+}
+</style>

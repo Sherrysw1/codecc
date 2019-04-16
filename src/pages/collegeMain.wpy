@@ -1,0 +1,896 @@
+<template>
+  <view style="border-top:1rpx solid rgb(224, 224, 224);{{infoSignal ? 'position: absolute; width: 100%; height: 100%; overflow: hidden;': ''}}">
+    <view>
+        <person></person>
+        <searchCollege></searchCollege>
+        <view class="college-score" wx:if="{{scoreSignal}}" @tap="changeInfoSignal">
+            <image class="college-score-img" src="../resource/img/college_main_edit.png"/>
+            <view class="college-score-text">
+                <view class="college-score-text-line">输入您的分数</view>
+                <view class="college-score-text-line">为您推荐学校</view>
+            </view>
+        </view>
+        <view wx:if="{{!removeTag}}" class="{{tagSignal ? '' : 'tag-animate'}}" >
+            <view class="tag-box">
+                <view class="{{tagId === '' ? 'tag-chosen' : 'tag-else'}}" @tap="tagClick('')">
+                    全部
+                </view>
+                <view  wx:for="{{tagList}}" wx:for-item="item" wx:key="index">
+                    <view class="{{tagId === item.tagId ? 'tag-chosen' : 'tag-else'}}" @tap="tagClick({{item}})">{{item.tagname}}</view>          
+                </view>       
+            </view>
+        </view>
+        <view class="college-tip">
+            <text>- 为您推荐您分数附近的大学 -</text>
+        </view>
+        <view class="select-box">
+            <picker class="select-choose1" range="{{provinceList}}" value="{{provinceIndex}}" bindchange="provinceChange">
+                <view class="select-choose1-title">
+                    {{provinceIndex === 0 ? '院校地区' : provinceList[provinceIndex]}}
+                </view>
+                <image class="select-choose1-img" src="../resource/img/collegeMain_down.png"/>
+            </picker>
+            <picker class="select-choose2" range="{{collegeSelectList}}" value="{{collegeSelectIndex}}" bindchange="collegeSelectChange">
+                <view class="select-choose2-title">
+                    {{collegeSelectIndex === 0 ? "985/211": collegeSelectList[collegeSelectIndex]}}
+                </view>
+                <image class="select-choose2-img" src="../resource/img/collegeMain_down.png"/>
+            </picker>
+            <picker class="select-choose3" range="{{collegeTypeList}}" value="{{collegeTypeIndex}}" bindchange="collegeTypeChange">
+                <view class="select-choose3-title">
+                    {{collegeTypeIndex === 0 ? '类别' : collegeTypeList[collegeTypeIndex]}}
+                </view>
+                <image class="select-choose3-img" src="../resource/img/collegeMain_down.png"/>
+            </picker>
+            <picker class="select-choose4" mode="multiSelector" range="{{scoreList}}" value="{{scoreIndex}}" bindchange="scoreChange">
+                <view class="select-choose4-title">
+                    {{scoreIndex[0] === 0 || scoreIndex[1] === 0 ? "分数段": scoreList[0][scoreIndex[0]] + "-" + scoreList[1][scoreIndex[1]]}}
+                </view>
+                <image class="select-choose4-img" src="../resource/img/collegeMain_down.png"/>
+            </picker>
+        </view>
+        <scroll-view scroll-y="true" bindscrolltolower="collegeMore" style="height: 600px;" bindscroll="tagHidden" > 
+            <view class="information-box" wx:for="{{collegeList}}" wx:for-item="item" wx:key="index">
+            <!-- <image class="information-badage" src="../resource/img/collegeMain_badage.png"/> -->
+            <view style="display:flex" @tap="collegeDetail({{item}})">
+                <image class="information-badage" src="{{item.schoolLogo}}"/>
+                <view class="information-details">          
+                <view class="information-details-line1">
+                    <text style="margin-right:30rpx">{{item.schoolName}}</text>
+                    <text style="font-size:24rpx;color:rgb(153,153,153);margin-right:24rpx;">{{item.schoolProvince}}</text>
+                    <!-- <text style="font-size:24rpx;color:#eca826;margin-right:24rpx;">{{item.f985?'985':''}}   {{item.f211?'211':''}}</text> -->
+                </view>
+                <view class="information-details-line2">
+                    <text style="margin-right:18rpx;">{{item.year}}录取线</text><text style="color:#0fa158;font-size:#0fa158">{{item.minScore}}</text>
+                </view>
+                <view class="information-details-line3">
+                    <view  wx:if="{{item.f985}}" class="information-details-tag">985</view>
+                    <view  wx:if="{{item.f211}}" class="information-details-tag">211</view>
+                    <view  wx:if="{{item.firstClassAttr}}" class="information-details-tag">{{item.firstClassAttr}}</view>
+                    <view  class="information-details-tag">
+                        {{item.tagList[0].tagname ? item.tagList[0].tagname : '默认标签 1'}}
+                    </view>
+                </view>
+                </view>
+                <image class="information-img" src="../resource/img/collegeMain_right.png"/>
+            </view>
+            </view>
+        </scroll-view> 
+    </view>   
+    <i-toast id="toast" /> 
+    <infoWindow wx:if="{{infoSignal}}"></infoWindow>
+  </view>
+</template>
+<script>
+const { $Toast } = require('../iview/base/index');
+import wepy from 'wepy';
+import common from '../mixins/common';
+import person from '../components/person';
+import searchCollege from '../components/college/searchcollege';
+import infoWindow from '../components/other/infoWindow';
+export default class collegeMain extends wepy.page {
+    config = {
+        navigationBarTitleText: '高考志愿',
+        usingComponents: {
+            'i-button': '../iview/button/index',
+            'i-toast': '../iview/toast/index'
+        }
+    }
+    components = {
+        searchCollege: searchCollege,
+        person: person,
+        infoWindow: infoWindow
+    }
+    mixins = [
+        common
+    ]
+    data = {
+        avatarUrl: '',
+        searchValue: '',
+        globalData: null,
+        score: '高考成绩',
+        subject: '',
+        province: '',
+        tagList: [],
+        collegeList: [],
+        pageNow: 1,
+        pageAll: null,
+        provinceList: ['不限地区', '安徽', '澳门', '北京', '重庆', '福建', '甘肃', '广东', '广西', '贵州', '海南', '河北', '河南', '黑龙江', '湖北', '湖南', '吉林', '江苏', '江西', '辽宁', '内蒙古', '宁夏', '青海', '山东', '山西', '陕西', '上海', '四川', '台湾', '天津', '西藏', '香港', '新疆', '云南', '浙江'],
+        subjectList: ['请选择科目', '文科', '理科'],
+        provinceIndex: 0,
+        subjectIndex: 0,
+        collegeTypeList: ['类别', '综合', '理工', '军事', '农林', '医药', '艺术', '财经', '语言', '民族', '政法', '师范', '体育', 'HND项目', '中外合作办学', '远程教育学院', '普通本科', '成人教育', '高职高专', '独立学院', '其他'],
+        collegeTypeIndex: 0,
+        collegeSelectList: ['不限', '985', '211'],
+        collegeSelectIndex: 0,
+        scoreList: [],
+        scoreIndex: [0, 0],
+        tagId: '',
+        tagName: '',
+        toResultSignal: false,
+        tagSignal: true,
+        infoSignal: false,
+        scoreSignal: true,
+        removeTag: false
+    }
+    computed = {}
+    methods = {
+        // 跳转大学详情页面
+        async collegeDetail (school) {
+            wepy.navigateTo({
+                url: '/pages/college/collegeDetail?schoolId=' + school.id + '&schoolName=' + school.schoolName
+            });
+        },
+        // 分页获取列表更多大学数据
+        async collegeMore() {
+            var self = this;
+            self.pageNow++;
+            if (self.pageAll < self.pageNow) {
+                $Toast({
+                    content: '没有更多数据啦',
+                    type: 'warning'
+                });
+                return;
+            }
+            self.$apply();
+            const resCollegeInfo = await this.request({
+                url: self.requestUrl + '/gkzywx/collegeInfo/getCollegeInfoList.do',
+                method: 'POST',
+                header: {
+                    'content-type': 'application/json',
+                    'cookie': 'JSESSIONID=' + this.$parent.globalData.sessionId
+                },
+                data: {
+                    'year': '2017',
+                    'firstClassAttr': '',
+                    'f211': parseInt(self.collegeSelectIndex) === 2 ? '1' : '',
+                    'f985': parseInt(self.collegeSelectIndex) === 1 ? '1' : '',
+                    'tagId': self.tagId,
+                    'schoolType': parseInt(self.collegeTypeIndex) === 0 ? '' : self.collegeTypeList[self.collegeTypeIndex],
+                    'schoolProvince': parseInt(self.provinceIndex) === 0 ? '' : self.provinceList[self.provinceIndex],
+                    'minScore': parseInt(self.scoreIndex[0]) === 0 ? '0' : self.scoreList[0][self.scoreIndex[0]],
+                    'maxScore': parseInt(self.scoreIndex[1]) === 0 ? '750' : self.scoreList[1][self.scoreIndex[1]],
+                    'studentType': self.subject,
+                    'studentProvince': self.province,
+                    'pageSize': 10,
+                    'pageNum': self.pageNow
+                }
+            }, false).catch(err => {
+                console.log(err);
+            });
+            if (resCollegeInfo.status === 0) {
+                resCollegeInfo.data.list.forEach(function(item) {
+                    self.collegeList.push(item);
+                    item.schoolLogo = 'https://gkzy-1258109256.cos.ap-beijing.myqcloud.com/school-logo/' + item.schoolLogo;
+                });
+                self.pageAll = resCollegeInfo.data.pages;
+                this.$parent.globalData.pageAll = self.pageAll;
+                this.$parent.globalData.collegeList = self.collegeList;
+                this.$parent.globalData.pageNow = self.pageNow;
+                self.$apply();
+            }
+            else {
+                $Toast({
+                    content: resCollegeInfo.msg,
+                    type: 'error'
+                });
+            }
+        },
+        // 筛选改变大学省份
+        async provinceChange (e) {
+            var self = this;
+            self.provinceIndex = e.detail.value;
+            self.pageNow = 1;
+            this.$parent.globalData.pageNow = self.pageNow;
+            this.$parent.globalData.provinceIndex = self.provinceIndex;
+            const resProvince = await this.request({
+                url: self.requestUrl + '/gkzywx/collegeInfo/getCollegeInfoList.do',
+                method: 'POST',
+                header: {
+                    'content-type': 'application/json',
+                    'cookie': 'JSESSIONID=' + this.$parent.globalData.sessionId
+                },
+                data: {
+                    'year': '2017',
+                    'firstClassAttr': '',
+                    'f211': parseInt(self.collegeSelectIndex) === 2 ? '1' : '',
+                    'f985': parseInt(self.collegeSelectIndex) === 1 ? '1' : '',
+                    'tagId': self.tagId,
+                    'schoolType': parseInt(self.collegeTypeIndex) === 0 ? '' : self.collegeTypeList[self.collegeTypeIndex],
+                    'schoolProvince': parseInt(self.provinceIndex) === 0 ? '' : self.provinceList[self.provinceIndex],
+                    'minScore': parseInt(self.scoreIndex[0]) === 0 ? '0' : self.scoreList[0][self.scoreIndex[0]],
+                    'maxScore': parseInt(self.scoreIndex[1]) === 0 ? '750' : self.scoreList[1][self.scoreIndex[1]],
+                    'studentType': self.subject,
+                    'studentProvince': self.province,
+                    'pageSize': 10,
+                    'pageNum': self.pageNow
+                }
+            }, false).catch(err => {
+                console.log(err);
+            });
+            if (resProvince.status === 0) {
+                self.pageAll = resProvince.data.pages;
+                self.collegeList = resProvince.data.list;
+                self.collegeList.forEach(function(item) {
+                    item.schoolLogo = 'https://gkzy-1258109256.cos.ap-beijing.myqcloud.com/school-logo/' + item.schoolLogo;
+                });
+                this.$parent.globalData.pageAll = self.pageAll;
+                this.$parent.globalData.collegeList = self.collegeList;
+                self.$apply();
+            }
+            else {
+                $Toast({
+                    content: resProvince.msg,
+                    type: 'error'
+                });
+            }
+            self.$apply();
+        },
+        // 筛选改变大学级别
+        async collegeSelectChange (e) {
+            var self = this;
+            self.collegeSelectIndex = e.detail.value;
+            self.pageNow = 1;
+            this.$parent.globalData.pageNow = self.pageNow;
+            this.$parent.globalData.collegeSelectIndex = self.collegeSelectIndex;
+            const resCollege = await this.request({
+                url: self.requestUrl + '/gkzywx/collegeInfo/getCollegeInfoList.do',
+                method: 'POST',
+                header: {
+                    'content-type': 'application/json',
+                    'cookie': 'JSESSIONID=' + this.$parent.globalData.sessionId
+                },
+                data: {
+                    'year': '2017',
+                    'firstClassAttr': '',
+                    'f211': parseInt(self.collegeSelectIndex) === 2 ? '1' : '',
+                    'f985': parseInt(self.collegeSelectIndex) === 1 ? '1' : '',
+                    'tagId': self.tagId,
+                    'schoolType': parseInt(self.collegeTypeIndex) === 0 ? '' : self.collegeTypeList[self.collegeTypeIndex],
+                    'schoolProvince': parseInt(self.provinceIndex) === 0 ? '' : self.provinceList[self.provinceIndex],
+                    'minScore': parseInt(self.scoreIndex[0]) === 0 ? '0' : self.scoreList[0][self.scoreIndex[0]],
+                    'maxScore': parseInt(self.scoreIndex[1]) === 0 ? '750' : self.scoreList[1][self.scoreIndex[1]],
+                    'studentType': self.subject,
+                    'studentProvince': self.province,
+                    'pageSize': 10,
+                    'pageNum': self.pageNow
+                }
+            }, false).catch(err => {
+                console.log(err);
+            });
+            if (resCollege.status === 0) {
+                self.pageAll = resCollege.data.pages;
+                self.collegeList = resCollege.data.list;
+                self.collegeList.forEach(function(item) {
+                    item.schoolLogo = 'https://gkzy-1258109256.cos.ap-beijing.myqcloud.com/school-logo/' + item.schoolLogo;
+                });
+                this.$parent.globalData.pageAll = self.pageAll;
+                this.$parent.globalData.collegeList = self.collegeList;
+                self.$apply();
+            }
+            else {
+                $Toast({
+                    content: resCollege.msg,
+                    type: 'error'
+                });
+            }
+            self.$apply();
+        },
+        // 筛选改变大学类型
+        async collegeTypeChange (e) {
+            var self = this;
+            self.pageNow = 1;
+            self.collegeTypeIndex = e.detail.value;
+            this.$parent.globalData.pageNow = self.pageNow;
+            const resType = await this.request({
+                url: self.requestUrl + '/gkzywx/collegeInfo/getCollegeInfoList.do',
+                method: 'POST',
+                header: {
+                    'content-type': 'application/json',
+                    'cookie': 'JSESSIONID=' + this.$parent.globalData.sessionId
+                },
+                data: {
+                    'year': '2017',
+                    'firstClassAttr': '',
+                    'f211': parseInt(self.collegeSelectIndex) === 2 ? '1' : '',
+                    'f985': parseInt(self.collegeSelectIndex) === 1 ? '1' : '',
+                    'tagId': self.tagId,
+                    'schoolType': parseInt(self.collegeTypeIndex) === 0 ? '' : self.collegeTypeList[self.collegeTypeIndex],
+                    'schoolProvince': parseInt(self.provinceIndex) === 0 ? '' : self.provinceList[self.provinceIndex],
+                    'minScore': parseInt(self.scoreIndex[0]) === 0 ? '0' : self.scoreList[0][self.scoreIndex[0]],
+                    'maxScore': parseInt(self.scoreIndex[1]) === 0 ? '750' : self.scoreList[1][self.scoreIndex[1]],
+                    'studentType': self.subject,
+                    'studentProvince': self.province,
+                    'pageSize': 10,
+                    'pageNum': self.pageNow
+                }
+            }, false).catch(err => {
+                console.log(err);
+            });
+            if (resType.status === 0) {
+                self.pageAll = resType.data.pages;
+                self.collegeList = resType.data.list;
+                self.collegeList.forEach(function(item) {
+                    item.schoolLogo = 'https://gkzy-1258109256.cos.ap-beijing.myqcloud.com/school-logo/' + item.schoolLogo;
+                });
+                this.$parent.globalData.pageAll = self.pageAll;
+                this.$parent.globalData.collegeList = self.collegeList;
+                self.$apply();
+            }
+            else {
+                $Toast({
+                    content: resType.msg,
+                    type: 'error'
+                });
+            }
+            self.$apply();
+        },
+        // 筛选改变分数
+        async scoreChange (e) {
+            var self = this;
+            if (e.detail.value[0] > e.detail.value[1] && e.detail.value[0] !== 0 && e.detail.value[1] !== 0) {
+                self.pageNow = 1;
+                self.scoreIndex[0] = e.detail.value[0];
+                self.scoreIndex[1] = e.detail.value[1];
+                this.$parent.globalData.scoreIndex[0] = self.scoreIndex[0];
+                this.$parent.globalData.scoreIndex[1] = self.scoreIndex[1];
+                self.pageNow = 1;
+                this.$parent.globalData.pageNow = self.pageNow;
+                const resScore = await this.request({
+                    url: self.requestUrl + '/gkzywx/collegeInfo/getCollegeInfoList.do',
+                    method: 'POST',
+                    header: {
+                        'content-type': 'application/json',
+                        'cookie': 'JSESSIONID=' + this.$parent.globalData.sessionId
+                    },
+                    data: {
+                        'year': '2017',
+                        'firstClassAttr': '',
+                        'f211': parseInt(self.collegeSelectIndex) === 2 ? '1' : '',
+                        'f985': parseInt(self.collegeSelectIndex) === 1 ? '1' : '',
+                        'tagId': self.tagId,
+                        'schoolType': parseInt(self.collegeTypeIndex) === 0 ? '' : self.collegeTypeList[self.collegeTypeIndex],
+                        'schoolProvince': parseInt(self.provinceIndex) === 0 ? '' : self.provinceList[self.provinceIndex],
+                        'minScore': parseInt(self.scoreIndex[0]) === 0 ? '0' : self.scoreList[0][self.scoreIndex[0]],
+                        'maxScore': parseInt(self.scoreIndex[1]) === 0 ? '750' : self.scoreList[1][self.scoreIndex[1]],
+                        'studentType': self.subject,
+                        'studentProvince': self.province,
+                        'pageSize': 10,
+                        'pageNum': self.pageNow
+                    }
+                }, false).catch(err => {
+                    console.log(err);
+                });
+                if (resScore.status === 0) {
+                    self.pageAll = resScore.data.pages;
+                    self.collegeList = resScore.data.list;
+                    self.collegeList.forEach(function(item) {
+                        item.schoolLogo = 'https://gkzy-1258109256.cos.ap-beijing.myqcloud.com/school-logo/' + item.schoolLogo;
+                    });
+                    this.$parent.globalData.pageAll = self.pageAll;
+                    this.$parent.globalData.collegeList = self.collegeList;
+                    self.$apply();
+                }
+                else {
+                    $Toast({
+                        content: resScore.msg,
+                        type: 'error'
+                    });
+                }
+                self.$apply();
+            }
+            else {
+                self.scoreIndex = [0, 0];
+                $Toast({
+                    content: '请输入正确的分数段',
+                    type: 'warning'
+                });
+                self.$apply();
+            }
+        },
+        // 选择标签
+        async tagClick (e) {
+            var self = this;
+            self.pageNow = 1;
+            if (e === '') {
+                self.tagId = e;
+                self.tagName = '';
+            }
+            else {
+                self.tagId = e.tagId;
+                self.tagName = e.tagname;
+            }
+            this.$parent.globalData.pageNow = self.pageNow;
+            this.$parent.globalData.tagId = self.tagId;
+            this.$parent.globalData.tagName = self.tagName;
+            const resTag = await this.request({
+                url: self.requestUrl + '/gkzywx/collegeInfo/getCollegeInfoList.do',
+                method: 'POST',
+                header: {
+                    'content-type': 'application/json',
+                    'cookie': 'JSESSIONID=' + this.$parent.globalData.sessionId
+                },
+                data: {
+                    'year': '2017',
+                    'firstClassAttr': '',
+                    'f211': parseInt(self.collegeSelectIndex) === 2 ? '1' : '',
+                    'f985': parseInt(self.collegeSelectIndex) === 1 ? '1' : '',
+                    'tagId': self.tagId,
+                    'schoolType': parseInt(self.collegeTypeIndex) === 0 ? '' : self.collegeTypeList[self.collegeTypeIndex],
+                    'schoolProvince': parseInt(self.provinceIndex) === 0 ? '' : self.provinceList[self.provinceIndex],
+                    'minScore': parseInt(self.scoreIndex[0]) === 0 ? '0' : self.scoreList[0][self.scoreIndex[0]],
+                    'maxScore': parseInt(self.scoreIndex[1]) === 0 ? '750' : self.scoreList[1][self.scoreIndex[1]],
+                    'studentType': self.subject,
+                    'studentProvince': self.province,
+                    'pageSize': 10,
+                    'pageNum': self.pageNow
+                }
+            }, false).catch(err => {
+                console.log(err);
+            });
+            if (resTag.status === 0) {
+                self.pageAll = resTag.data.pages;
+                self.collegeList = resTag.data.list;
+                self.collegeList.forEach(function(item) {
+                    item.schoolLogo = 'https://gkzy-1258109256.cos.ap-beijing.myqcloud.com/school-logo/' + item.schoolLogo;
+                });
+                this.$parent.globalData.pageAll = self.pageAll;
+                this.$parent.globalData.collegeList = self.collegeList;
+                self.$apply();
+            }
+            else {
+                $Toast({
+                    content: resTag.msg,
+                    type: 'error'
+                });
+            }
+        },
+        // 前往搜索页面
+        async toSearchPage (e) {
+            wepy.navigateTo({
+                url: '/pages/college/collegeSearch'
+            });
+        },
+        // 隐藏tag标签
+        async tagHidden () {
+            let self = this;
+            self.tagSignal = false;
+            await setTimeout(() => { self.removeTag = true; }, 1000);
+            self.$apply();
+        },
+        changeInfoSignal () {
+            this.infoSignal = true;
+        }
+    }
+    events = {
+        'changeInfoSignal': (infoSignal, scoreInfo) => {
+            this.infoSignal = infoSignal;
+            this.scoreSignal = scoreInfo;
+        }
+    }
+    async onLoad () {
+        let self = this;
+        this.getInfo();
+        this.tagRequest();
+        this.collegeInfoList();
+        this.toGlobalData();
+        self.$apply();
+    }
+    onUnload() {
+    }
+    async onShow () {
+        let self = this;
+        self.toResultSignal = false;
+        self.tagSignal = true;
+        self.removeTag = false;
+        self.$apply();
+    }
+    async tagRequest () {
+        let self = this;
+        const resTag = await this.request({
+            url: self.requestUrl + '/gkzywx/collegeTagInfo/getCollegeTagAll.do',
+            method: 'POST',
+            header: {
+                'content-type': 'application/json',
+                'cookie': 'JSESSIONID=' + this.$parent.globalData.sessionId
+            },
+            data: {
+            }
+        }, false).catch(err => {
+            console.log(err);
+        });
+        if (resTag.status === 0) {
+            self.tagList = resTag.data;
+        }
+        else {
+            $Toast({
+                content: resTag.msg,
+                type: 'error'
+            });
+        }
+    }
+    async collegeInfoList () {
+        let self = this;
+        const res = await this.request({
+            url: self.requestUrl + '/gkzywx/collegeInfo/getCollegeInfoList.do',
+            method: 'POST',
+            header: {
+                'content-type': 'application/json',
+                'cookie': 'JSESSIONID=' + this.$parent.globalData.sessionId
+            },
+            data: {
+                'year': '2017',
+                'firstClassAttr': '',
+                'f211': '',
+                'f985': '',
+                'tagId': '',
+                'schoolType': '',
+                'schoolProvince': '',
+                'minScore': parseInt(self.scoreIndex[0]) === 0 ? '0' : self.scoreList[0][self.scoreIndex[0]],
+                'maxScore': parseInt(self.scoreIndex[1]) === 0 ? '0' : self.scoreList[1][self.scoreIndex[1]],
+                'studentType': self.subject,
+                'studentProvince': self.province,
+                'pageSize': 10,
+                'pageNum': self.pageNow
+            }
+        }, false).catch(err => {
+            console.log(err);
+        });
+        if (res.status === 0) {
+            self.pageAll = res.data.pages;
+            self.collegeList = res.data.list;
+            self.collegeList.forEach(function(item) {
+                item.schoolLogo = 'https://gkzy-1258109256.cos.ap-beijing.myqcloud.com/school-logo/' + item.schoolLogo;
+            });
+            this.$parent.globalData.collegeList = self.collegeList;
+            this.$parent.globalData.pageAll = self.pageAll;
+            self.$apply();
+        }
+        else {
+            $Toast({
+                content: res.msg,
+                type: 'error'
+            });
+        }
+    }
+    async toGlobalData () {
+        let self = this;
+        this.$parent.globalData.collegeSelectIndex = self.collegeSelectIndex;
+        this.$parent.globalData.tagId = self.tagId;
+        this.$parent.globalData.collegeTypeIndex = self.collegeTypeIndex;
+        this.$parent.globalData.provinceIndex = self.provinceIndex;
+        this.$parent.globalData.scoreIndex = self.scoreIndex;
+        this.$parent.globalData.tagName = self.tagName;
+    }
+    // 获取全局变量以及判断处理
+    async getInfo () {
+        let self = this;
+        let scoreList = [''];
+        self.scoreList = [];
+        for (let i = 750; i > -1; i--) {
+            let strI = '' + i;
+            scoreList.push(strI);
+        }
+        self.scoreList.push(scoreList);
+        self.scoreList.push(scoreList);
+        if (this.$parent.globalData.userInfo) {
+            self.avatarUrl = this.$parent.globalData.userInfo.avatarUrl;
+        }
+        else {
+            this.$parent.getUserInfo(function (userInfo) {
+                self.$parent.globalData.userInfo = userInfo;
+                self.avatarUrl = self.$parent.globalData.userInfo.avatarUrl;
+                self.$apply();
+            });
+        }
+        self.globalData = this.$parent.globalData;
+        if (self.globalData.userInfoFromServer.studentScore !== -1) {
+            self.score = self.globalData.userInfoFromServer.studentScore;
+            self.scoreList[0].forEach((score, index) => {
+                if (parseInt(score) === parseInt(self.score)) {
+                    self.scoreIndex[0] = index + 10;
+                    self.scoreIndex[1] = index - 10;
+                    self.$apply();
+                }
+            });
+        }
+        self.province = self.globalData.userInfoFromServer.studentProvince;
+        self.subject = self.globalData.userInfoFromServer.studentType;
+        self.requestUrl = this.$parent.globalData.requestUrl;
+        self.$parent.dataFromServer.studentScore !== -1 ? self.scoreSignal = false : self.scoreInfo = true;
+        self.$apply();
+    }
+    async getLastPage() {
+        let pages = getCurrentPages();
+        let lastPage = pages[pages.length - 2].route;
+        return `/${lastPage}`;
+    }
+  }
+</script>
+<style lang="less" scoped>
+.userinfo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.userinfo-avatar {
+    width: 80rpx;
+    height: 80rpx;
+    border-radius: 50%;
+}
+.userinfo-nickname {
+    color: #aaa;
+}
+//标签区域
+.tag-box {
+    width:720rpx;
+    max-height:270rpx;
+    margin:20rpx auto 0;
+    display:flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    overflow: hidden;
+}
+.tag-all {
+    width:142rpx;
+    height:70rpx;
+    background-color: #fdf2db;
+    border-radius:20rpx;
+    font-size:32rpx;
+    color:rgb(155, 155, 155);
+    line-height: 70rpx;
+    text-align: center;
+    margin-left:16rpx;
+    margin-right:15rpx;
+    margin-top:10rpx;
+    margin-bottom:10rpx;
+}
+.tag-else {
+    width:116rpx;
+    height:57rpx;
+    background-color: #eefbf5;
+    color: #1fbe79;
+    border-radius:6rpx;
+    font-size:27rpx;
+    line-height:57rpx;
+    text-align:center;
+    margin-left:14rpx;
+    margin-right:14rpx;
+    margin-top:9rpx;
+    margin-bottom:9rpx;
+}
+.tag-chosen {
+    width:116rpx;
+    height:57rpx;
+    background-color: #1fbe79;
+    color: white;
+    border-radius:6rpx;
+    font-size:27rpx;
+    line-height:57rpx;
+    text-align:center;
+    margin-left:14rpx;
+    margin-right:14rpx;
+    margin-top:9rpx;
+    margin-bottom:9rpx;
+}
+
+//下拉框
+.select-box {
+    width:100%;
+    height:70rpx;
+    border-top:1rpx solid #e0e0e0;
+    border-bottom:1rpx solid #e0e0e0;
+    margin-top:20rpx;
+    display:flex;
+}
+.select-choose1 {
+    font-size:26rpx;
+    width:220rpx;
+    height:68rpx;
+    color:rgb(51, 51, 51);
+}
+.select-choose1-title {
+    text-align:right;
+    float:left;
+    width:174rpx;
+    line-height:68rpx;
+    margin-right:12rpx;
+    text-align: center;
+}
+.select-choose1-img {
+    float:left;
+    width:19rpx;
+    height:10rpx;
+    margin-top:31rpx;
+    margin-right:14rpx;
+}
+.select-choose2 {
+    font-size:26rpx;
+    width:180rpx;
+    height:68rpx;
+    color:rgb(51, 51, 51);
+}
+.select-choose2-title {
+    text-align:right;
+    float:left;
+    width:134rpx;
+    line-height:68rpx;
+    margin-right:12rpx;
+    text-align: center;
+}
+.select-choose2-img {
+    float:left;
+    width:19rpx;
+    height:10rpx;
+    margin-top:31rpx;
+    margin-right:14rpx;
+}
+.select-choose3 {
+    font-size:26rpx;
+    width:130rpx;
+    height:68rpx;
+    color:rgb(51, 51, 51);
+    text-align: center;
+}
+.select-choose3-title {
+    text-align:right;
+    float:left;
+    width:87rpx;
+    line-height:68rpx;
+    margin-right:12rpx;
+}
+.select-choose3-img {
+    float:left;
+    width:19rpx;
+    height:10rpx;
+    margin-top:31rpx;
+    margin-right:14rpx;
+}
+.select-choose4 {
+    font-size:26rpx;
+    width:160rpx;
+    height:68rpx;
+    color:rgb(51, 51, 51);
+    text-align: center;
+}
+.select-choose4-title {
+    text-align:right;
+    float:left;
+    width:117rpx;
+    line-height:68rpx;
+    margin-right:12rpx;
+}
+.select-choose4-img {
+    float:left;
+    width:19rpx;
+    height:10rpx;
+    margin-top:31rpx;
+    margin-right:14rpx;
+}
+.information-box{
+    width:690rpx;
+    height:220rpx;
+    display:flex;
+    border-bottom:1rpx solid #e0e0e0;
+    margin:auto;
+}
+.information-badage {
+    width:137rpx;
+    height:137rpx;
+    margin-top:41.5rpx;
+}
+.information-details {
+    width:533rpx;
+    height:219rpx;
+}
+.information-img {
+    margin-top:94rpx;
+    width:19rpx;
+    height:33rpx;
+}
+.information-details-line1 {
+    height:80rpx;
+    margin-top:20rpx;
+    font-size:36rpx;
+    color: rgb(51, 51, 51);
+    padding-left:30rpx;
+    line-height:80rpx;
+}
+.information-details-line2 {
+    height:50rpx;
+    font-size:28rpx;
+    line-height:50rpx;
+    padding-left:30rpx;
+    color:#a7a7a7;
+    margin-top:-13rpx;
+}
+.information-details-line3 {
+    height:42rpx;
+    width:100%;
+    margin-top:15rpx;
+    display:flex;
+    padding-left:30rpx;
+}
+.information-details-tag {
+    height:40rpx;
+    border-radius:6rpx;
+    color:#a9a9a9;
+    font-size:18rpx;
+    text-align:center;
+    line-height:38rpx;
+    margin-right:9px;
+    background: #f5f5f5;
+    padding-left: 16rpx;
+    padding-right: 16rpx;
+}
+// newUI
+.college-tip{
+    width: 100%;
+    margin-top: 10rpx;
+    text-align: center;
+    font-size: 24rpx;
+    color: #a9a9a9;
+}
+.college-score {
+    position: absolute;
+    display: flex;
+    width: 294rpx;
+    height: 81rpx;
+    background: linear-gradient(to right, #fdbc3d, #f7a401);
+    border-radius: 6rpx;
+    top:20rpx;
+    right:30rpx;
+    &-img {
+        margin: 22rpx 24rpx 0 30rpx;
+        width: 34rpx;
+        height: 37rpx;
+    }
+    &-text {
+        height:62rpx;
+        margin-top:9rpx;
+        &-line {
+            font-size:28rpx;
+            line-height: 31rpx;
+            color: white;
+        }
+    }
+}
+//标签区域
+@keyframes fadeOut{
+    0% {
+        opacity: 1;
+        max-height: 270rpx; 
+    }
+    50% {
+        opacity: 0.5;
+        max-height: 100rpx;
+    }
+    100% {
+        opacity: 0;
+        max-height: 0rpx;
+    }
+}
+.tag-animate {
+    animation: fadeOut 1s 1 forwards;
+}
+</style>

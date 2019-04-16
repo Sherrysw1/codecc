@@ -1,0 +1,35 @@
+<template>
+    <view class="button">
+        <slot></slot>
+    </view>
+</template>
+<script>
+import wepy from 'wepy';
+import common from '../../mixins/common';
+export default class buttonA extends wepy.component {
+    data = {
+    }
+    props = {
+    }
+    mixins = [
+        common
+    ]
+    methods = {
+    }
+    async onLoad () {
+    }
+}
+</script>
+<style lang="less" scoped>
+.button {
+    width: 690rpx;
+    height: 80rpx;
+    margin:auto;
+    background: #1fbe79;
+    border-radius: 10rpx;
+    font-size: 26rpx;
+    line-height: 80rpx;
+    text-align: center;
+    color: white;
+}
+</style>

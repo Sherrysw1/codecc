@@ -1,0 +1,89 @@
+<template>
+    <view>
+        <view class="introduction" style="height:{{introSignal ? 'auto' : '146rpx'}}">
+            <slot></slot>
+        </view>
+        <view class="hidden" @tap="moreInfo">
+            <view class="hidden-text" >{{introSignal ? '收起全部' : '展开全部'}}</view>
+            <view class="{{introSignal ? 'hidden-up' : 'hidden-down'}}"></view>
+        </view>
+    </view>
+</template>
+<script>
+import wepy from 'wepy';
+import common from '../../mixins/common';
+export default class hiddenNew extends wepy.component {
+    data = {
+        introSignal: false
+    }
+    props = {
+    }
+    mixins = [
+        common
+    ]
+    methods = {
+        async moreInfo () {
+            this.introSignal = !this.introSignal;
+            console.log(this.introSignal);
+        }
+    }
+    async onLoad () {
+    }
+}
+</script>
+<style lang="less" scoped>
+.introduction{
+    position: relative;
+    margin: 0 auto;
+    width:690rpx;
+    overflow: hidden;
+    font-size: 26rpx;
+    line-height: 39rpx;
+    color: #333333;
+}
+.hidden {
+    display: flex;
+    justify-content: center;
+    width: 690rpx;
+    height: 26rpx;
+    margin: 29rpx auto 0;
+    font-size: 26rpx;
+    text-align: center;
+    border-radius: 6rpx;
+    &-text {
+        color: #1bbc81;
+    }
+    &-down {
+        position:relative;
+        width: 0;
+        height: 0;
+        border-width: 8rpx 14rpx 0;
+        border-style: solid;
+        border-color: #1bbc81 transparent transparent;
+        margin-top:13rpx;
+        margin-left:10rpx;
+    }
+    &-up {
+        position: relative;
+        width: 0;
+        height: 0;
+        border-width: 0 14rpx 8rpx;
+
+        border-style: solid;
+        border-color: transparent transparent #1bbc81;
+        margin-top:13rpx;
+        margin-left:10rpx;
+    }
+}
+.introduction-button {
+    width: 690rpx;
+    height: 80rpx;
+    margin: 14rpx auto 0;
+    border: 1rpx solid #1fbe79;
+    font-size: 30rpx;
+    line-height: 80rpx;
+    text-align: center;
+    color: #1fbe79;
+    border-radius: 6rpx;
+}
+</style>

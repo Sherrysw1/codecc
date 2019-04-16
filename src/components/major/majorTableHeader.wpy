@@ -1,0 +1,58 @@
+<template>
+    <view class="box">
+        <view class="item">
+            <slot name="first"></slot>
+        </view>
+        <view class="item">
+            <slot name="second"></slot>
+        </view>
+        <view class="item">
+            <slot name="third"></slot>
+        </view>
+        <view class="item">
+            <slot name="forth"></slot>
+        </view>
+        <view class="item">
+            <slot name="fifth"></slot>
+        </view>
+    </view>
+</template>
+<script>
+import wepy from 'wepy';
+import common from '../../mixins/common';
+export default class majorTableHeader extends wepy.component {
+    data = {
+    }
+    props = {
+    }
+    mixins = [
+        common
+    ]
+    options = {
+    }
+    methods = {
+    }
+    events = {
+    }
+    async onLoad () {
+    }
+}
+</script>
+<style lang="less" scoped>
+.box {
+    display: flex;
+    margin: auto;
+    width: 690rpx;
+    height: 60rpx;
+    background: #d1e4ff;
+    border-bottom: solid 1rpx #e8f3ff;
+}
+.item {
+    width: 138rpx;
+    line-height: 60rpx;
+    font-size: 26rpx;
+    font-weight: bold;
+    color: #333333;
+    text-align: center;
+}
+</style>

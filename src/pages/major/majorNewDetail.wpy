@@ -1,0 +1,150 @@
+<template>
+    <view>
+        <view class="header">
+            <view class="title">金融工程</view>
+            <view class="tag">
+                <view class="tag-item">好就业</view>
+                <view class="tag-item">好就业</view>
+                <view class="tag-item">好就业</view>
+            </view>
+        </view>
+        <view class="background">
+            <tab>
+                <view slot="tab1">专业介绍</view>
+                <view slot="tab2">开设院校</view>
+                <view slot="tab3">就业前景</view>
+                <view slot="detailTab1">
+                    1
+                </view>
+                <view slot="detailTab2">
+                    <rank>
+                        <view slot="intro">共有207所院校</view>
+                    </rank>
+                    <tableHeader></tableHeader>
+                    <repeat for="{{list}}" key="index" index="index" item="item">
+                        <collegeItem>
+                            <view slot="first" style="width: 100%; height: 100%">
+                                <image style="width: 54rpx; height: 41rpx;" wx:if="{{index === 0}}" src="../../resource/img/major_first.png"/>
+                                <image style="width: 54rpx; height: 41rpx;" wx:if="{{index == 1}}" src="../../resource/img/major_second.png"/>
+                                <image style="width: 54rpx; height: 41rpx;" wx:if="{{index == 2}}" src="../../resource/img/major_third.png"/>
+                                <view wx:else>{{index + 1}}</view>
+                            </view>
+                            <view slot="second" style="width: 100%; height: 100%">
+                                <image style="width: 100%; height: 100%" src="../../resource/img/school_icon.png" />
+                            </view>
+                            <view slot="third-title">清华大学</view>
+                            <view slot="third-tag" class="tag-college">
+                                <view class="tag-college-item">1234</view>
+                                <view class="tag-college-item">1234</view>
+                                <view class="tag-college-item">1234</view>
+                            </view>
+                            <view slot="forth">A+</view>
+                            <view slot="fifth">666</view>
+                            <view slot="sixth" style="width: 100%; height: 100%">
+                                <image style="width: 100%; height: 100%" src="../../resource/img/major_new_right.png" />
+                            </view>
+                        </collegeItem>
+                    </repeat>
+                </view>
+                <view slot="detailTab3">
+                    3
+                </view>
+            </tab>
+        </view>
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy';
+import common from '../../mixins/common';
+import tabThree from '../../components/common/tabThree';
+import title from '../../components/common/titleNew';
+import select from '../../components/major/majorSelect';
+import tableHeader from '../../components/major/majorNewDetail/tableHeader';
+import collegeItem from '../../components/major/majorNewDetail/collegeItem';
+import rank from '../../components/major/majorNewDetail/collegeRank';
+export default class majorNewDetail extends wepy.page {
+    config = {
+        navigationBarTitleText: '',
+        'usingComponents': {
+            'i-tabs': '../../iview/tabs/index',
+            'i-tab': '../../iview/tab/index',
+            'i-spin': '../../iview/spin/index'
+        }
+    }
+    components = {
+        tab: tabThree,
+        title: title,
+        select: select,
+        tableHeader: tableHeader,
+        collegeItem: collegeItem,
+        rank: rank
+    }
+    mixins = [
+        common
+    ]
+    data = {
+        list: [1, 2, 3, 4, 5]
+    }
+    methods = {
+    }
+    async onLoad() {
+    }
+}
+</script>
+<style lang="less" scoped>
+.header {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    height: 188rpx;
+    background: white;
+}
+.title {
+    margin: 34rpx 0 0 30rpx;
+	font-size: 40rpx;
+	font-weight: bold;
+	color: #333333;
+}
+.tag {
+    display: flex;
+    margin: 26rpx 0 0 30rpx;
+    width: 690rpx;
+    height: 40rpx;
+    overflow: hidden;
+    &-item {
+        margin-right:10rpx;
+        padding: 0 18rpx;
+        height:36rpx;
+        background-color: #f6fffe;
+        border-radius: 6rpx;
+        border: solid 1rpx #ace5e0;
+        font-size: 22rpx;
+        color: #1ebfb2;
+        line-height: 36rpx;
+    }
+}
+.background {
+    width: 100%;
+    padding-top: 20rpx;
+    padding-bottom: 1rpx;
+    background: #f5f4fa;
+}
+//大学排名list 
+.tag-college {
+    display: flex;
+    position: absolute;
+    bottom: 0;
+    width: 340rpx;
+}
+.tag-college-item {
+    height: 20rpx;
+    margin-right: 6rpx;
+    padding: 3rpx 6rpx 3rpx 6rpx;
+    border-radius: 2rpx;
+    font-size: 18rpx;
+    color: #f65252;
+    border: solid 1rpx #f65252;
+    line-height: 20rpx;
+}
+</style>

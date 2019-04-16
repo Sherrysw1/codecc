@@ -1,0 +1,489 @@
+<template>
+    <view>
+        <view class="search-back" >
+            <image class="search-back-img" src="../../resource/img/college_search.png"/>
+            <input class="search-back-text" placeholder="输入专业名称" value="{{majorName}}" confirm-type="search" bindinput="majorSearch"/>
+        </view>
+        <view class="search-back-line" wx:for="{{majorListShow}}" wx:for-item="item" >
+            <view @tap="majorSelect({{item}})">{{item.majorName}}</view>
+        </view>
+        <view class="tip">
+            <view class="tip-text">院校部分年份专业分数未公示</view>
+            <image class="tip-img" src="../../resource/img/college_info.png"/>
+        </view>
+        <view class="tip" style="margin-top:13rpx;">
+            <view class="tip-text" style="color:#333333">● 最低分</view>
+            <view class="tip-text">● 历年平均分</view>
+        </view>
+        <view wx:for="{{detailListNow}}" wx:for-item="superClassItem">
+            <view class="title">
+                <view class="title-border"></view>
+                <view class="title-text">{{superClassItem.superClassType}} （{{superClassItem.superClassList.length}}）</view>
+            </view>
+            <view class="tag">
+                <view wx:for="{{superClassItem.superClassList}}" wx:for-item="firstClassItem">
+                    <view class="tag-box" style="width:{{firstClassItem.firstClassType.length*31 + 52}}rpx" @tap="clickFirstClass({{firstClassItem.index}})">
+                        <view class="{{firstClassItem.index === indexShow ? 'tag-box-selected' : 'tag-box-item'}}" style="width:{{firstClassItem.firstClassType.length*31 + 52}}rpx">
+                            {{firstClassItem.firstClassType}}
+                        </view>
+                        <view wx:if="{{firstClassItem.index === indexShow}}" class="tag-box-tra"></view>
+                        <view wx:if="{{firstClassItem.index === indexShow}}" class="tag-box-tableback">
+                            <view class="tag-box-table">
+                                <view class="tag-box-table-title">
+                                    <view class="tag-box-table-title-left">专业名称</view>
+                                    <view class="tag-box-table-title-mid"></view>
+                                    <view class="tag-box-table-title-right">录取年份</view>
+                                </view>
+                                <!-- <view class="tag-box-table-yeartitle"> 2018 </view> -->
+                                <view class="tag-box-table-yeartitle"> 2017 </view>
+                                <view class="tag-box-table-yeartitle"> 2016 </view>
+                                <view class="tag-box-table-yeartitle"> 2015 </view>
+                            </view>
+                            <view wx:for="{{firstClassItem.firstClassTypeList}}" wx:for-item="majorItem" wx:for-index="idx">
+                                <view class="tag-box-line">
+                                    <view wx:if="{{showIndex === idx}}" class="tag-box-line-show">{{majorItem.majorName}}</view>                                    
+                                    <view class="tag-box-line-title" bindtouchstart="showNameChangeStart" bindtouchend="showNameChangeEnd" data-name="{{majorItem.majorName}}" data-index="{{idx}}">{{majorItem.majorName}}</view>
+                                    <!-- <view class="tag-box-line-content">{{majorItem.min2018}}</view> -->
+                                    <view style="display:flex" bindtouchstart="showNameChangeStart" bindtouchend="showNameChangeEnd" data-name="{{majorItem.majorName}}" data-index="{{idx}}">
+                                        <view class="{{majorItem.min2017 === '--' ? majorItem.avr2017 === '--' ? 'tag-box-line-content' :'tag-box-line-contentBlack' : 'tag-box-line-content'}}">{{majorItem.min2017 === '--' ? majorItem.avr2017 : majorItem.min2017}}</view>
+                                        <view class="{{majorItem.min2016 === '--' ? majorItem.avr2016 === '--' ? 'tag-box-line-content' :'tag-box-line-contentBlack' : 'tag-box-line-content'}}">{{majorItem.min2016 === '--' ? majorItem.avr2016 : majorItem.min2016}} </view>
+                                        <view class="{{majorItem.min2015 === '--' ? majorItem.avr2015 === '--' ? 'tag-box-line-content' :'tag-box-line-contentBlack' : 'tag-box-line-content'}}">{{majorItem.min2015 === '--' ? majorItem.avr2015 : majorItem.min2015}}</view>
+                                    </view>
+                                    <view class="tag-box-line-detail" @tap="toMajor({{majorItem.standardMajorName}})">详情 ></view>
+                                </view>
+                            </view>
+                        </view>
+                        <view wx:if="{{firstClassItem.index === indexShow}}" class="tag-box-backhidden">
+                            <view class="tag-box-table">
+                                <view class="tag-box-table-title">
+                                    <view class="tag-box-table-title-left">专业名称</view>
+                                    <view class="tag-box-table-title-mid"></view>
+                                    <view class="tag-box-table-title-right">录取年份</view>
+                                </view>
+                                <!-- <view class="tag-box-table-yeartitle"> 2018 </view> -->
+                                <view class="tag-box-table-yeartitle"> 2017 </view>
+                                <view class="tag-box-table-yeartitle"> 2016 </view>
+                                <view class="tag-box-table-yeartitle"> 2015 </view>
+                            </view>
+                            <view wx:for="{{firstClassItem.firstClassTypeList}}" wx:for-item="majorItem">
+                                <view class="tag-box-line">
+                                    <view class="tag-box-line-title">{{majorItem.majorName}}</view>
+                                    <!-- <view class="tag-box-line-content">{{majorItem.min2018}}</view> -->
+                                    <view class="tag-box-line-content">{{majorItem.min2017 === '--' ? majorItem.avr2017 : majorItem.min2017}}</view>
+                                    <view class="tag-box-line-content">{{majorItem.min2016 === '--' ? majorItem.avr2016 : majorItem.min2016}} </view>
+                                    <view class="tag-box-line-content">{{majorItem.min2015 === '--' ? majorItem.avr2015 : majorItem.min2015}}</view>
+                                    <view class="tag-box-line-detail"> 详情 ></view>
+                                </view>
+                            </view>
+                        </view>
+                    </view>
+                </view>
+            </view>
+        </view>
+        <i-toast id="toast" /> 
+    </view>
+</template>
+<script>
+const { $Toast } = require('../../iview/base/index');
+import wepy from 'wepy';
+import common from '../../mixins/common';
+export default class collegeSearchMajor extends wepy.component {
+    config = {
+        usingComponents: {
+            'i-toast': '../../iview/toast/index'
+        }
+    }
+    data = {
+        majorName: '',
+        itemWidth: 200,
+        itemName: '信息与通信',
+        signalTrue: true,
+        signalFalse: false,
+        collegeName: '',
+        studentType: '',
+        studentProvince: '',
+        detailList: [],
+        detailListNow: [],
+        majorList: [],
+        majorListShow: [],
+        showList: [],
+        indexShow: 0,
+        showIndex: false,
+        majorNameList: []
+    }
+    props = {
+    }
+    mixins = [
+        common
+    ]
+    methods = {
+        async clickFirstClass (classIndex) {
+            this.indexShow = classIndex;
+            this.$apply();
+        },
+        majorSearch (e) {
+            console.log(e);
+            let self = this;
+            self.majorListShow = [];
+            self.majorName = e.detail.value;
+            if (e.detail.value.length === 0 || e.detail.value.length === 1) {
+            }
+            else {
+                self.majorList.forEach(function(major) {
+                    console.log('major', major);
+                    if (major.majorName.indexOf(e.detail.value) > -1) {
+                        self.majorListShow.push(major);
+                    }
+                });
+                self.$apply();
+            }
+        },
+        async majorSelect (item) {
+            let self = this;
+            self.indexShow = item.index;
+            self.majorName = '';
+            self.majorListShow = [];
+            self.$apply();
+        },
+        showNameChangeStart (e) {
+            let self = this;
+            if (e.currentTarget.dataset.name.length > 11) {
+                self.showIndex = parseInt(e.currentTarget.dataset.index);
+            }
+            self.$apply();
+        },
+        showNameChangeEnd (e) {
+            let self = this;
+            setTimeout(() => {
+                self.showIndex = -1;
+                self.$apply();
+            }, 2000);
+        },
+        toMajor (name) {
+            let self = this;
+            self.majorNameList.forEach(item => {
+                if (item.majorName === name) {
+                    wepy.navigateTo({
+                        url: `/pages/major/majorDetail?mid=${item.mid}`
+                    });
+                }
+            });
+        }
+    }
+    async onLoad () {
+        let self = this;
+        console.log('testtt', this.$parent);
+        self.studentType = this.$parent.globalData.userInfoFromServer.studentType;
+        self.studentProvince = this.$parent.globalData.userInfoFromServer.studentProvince;
+        self.collegeName = this.$parent.schoolName;
+        this.requestDetail();
+        this.requestMajor();
+        self.$apply();
+    }
+    async requestDetail () {
+        let self = this;
+        const resMajor = await this.request({
+            url: this.requestUrl + '/gkzywx/majorEnroll/getMajorEnrollListLayered.do',
+            data: {
+                'studentProvince': self.studentProvince,
+                'studentType': self.studentType,
+                'schoolName': self.collegeName
+            },
+            method: 'POST'
+        }, false).catch(err => {
+            console.log(err);
+        });
+        if (resMajor.status === 0) {
+            let index = 0;
+            self.detailList = resMajor.data;
+            self.detailList.forEach(superClass => {
+                superClass.superClassList.forEach(firstClass => {
+                    firstClass.index = index;
+                    firstClass.firstClassTypeList.forEach(major => {
+                        major.isShow = false;
+                        self.majorList.push({
+                            majorName: major.majorName,
+                            index: index
+                        });
+                        major.min2015 = '--';
+                        major.min2016 = '--';
+                        major.min2017 = '--';
+                        major.min2018 = '--';
+                        major.avr2015 = '--';
+                        major.avr2016 = '--';
+                        major.avr2017 = '--';
+                        major.avr2018 = '--';
+                        major.mid = null;
+                        let noAction = null;
+                        major.majorEnrollListDetailVoList.forEach(year => {
+                            major.standardMajorName = year.standardMajorName;
+                            year.year === '2015' ? year.avgScore === -1 ? major.avr2015 = '--' : major.avr2015 = year.avgScore : noAction = '';
+                            year.year === '2016' ? year.avgScore === -1 ? major.avr2016 = '--' : major.avr2016 = year.avgScore : noAction = '';
+                            year.year === '2017' ? year.avgScore === -1 ? major.avr2017 = '--' : major.avr2017 = year.avgScore : noAction = '';
+                            year.year === '2018' ? year.avgScore === -1 ? major.avr2018 = '--' : major.avr2018 = year.avgScore : noAction = '';
+                            year.year === '2015' ? year.minScore === -1 ? major.min2015 = '--' : major.min2015 = year.minScore : noAction = '';
+                            year.year === '2016' ? year.minScore === -1 ? major.min2016 = '--' : major.min2016 = year.minScore : noAction = '';
+                            year.year === '2017' ? year.minScore === -1 ? major.min2017 = '--' : major.min2017 = year.minScore : noAction = '';
+                            year.year === '2018' ? year.minScore === -1 ? major.min2018 = '--' : major.min2018 = year.minScore : noAction = '';
+                        });
+                        self.showList.push(false);
+                        console.log(noAction);
+                    });
+                    index++;
+                });
+            });
+            self.detailListNow = self.detailList;
+            self.$apply();
+        }
+    }
+    async requestMajor () {
+        let self = this;
+        const resMajor = await this.request({
+            url: self.requestUrl + '/gkzywx/majorInfoBake/getMajorSearchVoList.do',
+            method: 'POST',
+            header: {
+                'content-type': 'application/json',
+                'cookie': 'JSESSIONID=' + this.$parent.globalData.sessionId
+            },
+            data: {
+            }
+        }, false).catch(err => {
+            console.log(err);
+        });
+        if (resMajor.status === 0) {
+            self.majorNameList = resMajor.data;
+        }
+        else {
+            $Toast({
+                content: resMajor.msg,
+                type: 'error'
+            });
+        }
+    }
+}
+</script>
+<style lang="less" scoped>
+.search-back {
+    position: relative;
+    margin: 33rpx auto 26rpx;
+    width: 689rpx;
+    height: 76rpx;
+    border: 1rpx solid #dcdcdc;
+    border-radius: 10rpx;
+    &-img {
+        width:100%;
+        height:100%;
+    }
+    &-text {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        font-size:26rpx;
+        line-height:100%;
+        color: #bababa;
+        top:0;
+        line-height:76rpx;
+        left:80rpx;
+    }
+    &-line {
+    width:100%;
+    height:94rpx;
+    border-bottom:1rpx solid #f0eeee;
+    border-top:1rpx solid #f0eeee;
+    color:#666666;
+    font-size:32rpx;
+    line-height: 94rpx;
+    padding-left:60rpx;
+    }
+}
+.title {
+    display: flex;
+    height: 34rpx;
+    margin-top:14rpx;
+    margin-left: 30rpx;
+    margin-bottom:26rpx;
+    font-weight:bold;
+    &-border {
+        width: 6rpx;
+        height: 32rpx;
+        margin-top: 1rpx;
+        background: #1fbe79;
+    }
+    &-text {
+        margin-left:19rpx;
+        font-size:34rpx;
+        line-height: 34rpx;
+    }
+}
+.tag {
+    display:flex;
+    width:715rpx;
+    margin:auto;
+    flex-wrap:wrap;
+    &-box {
+        margin-left: 13rpx;
+        margin-right: 13rpx;
+        margin-bottom: 22rpx;
+        &-item {
+            height: 70rpx;
+            line-height: 70rpx;
+            color: #333333;
+            font-size: 28rpx;
+            background: #eefbf5;
+            text-align: center;
+            border-radius: 6rpx;
+        }
+        &-selected {
+            height: 70rpx;
+            line-height: 70rpx;
+            color: #ffffff;
+            font-size: 28rpx;
+            background: #1fbe79;
+            text-align: center;
+            border-radius: 6rpx;
+        }
+        &-tra {
+            margin:7rpx auto 0;
+            width: 0;
+            height: 0;
+            border-top: 0;
+            border-left: 21rpx solid transparent;
+            border-right: 21rpx solid transparent;
+            border-bottom: 21rpx solid #fafafa;
+        }
+        &-tableback {
+            position:absolute;
+            left:30rpx;
+            width: 689rpx;
+            background: #fafafa;
+            border-radius: 6rpx;
+        }
+        &-backhidden {
+            width: 689rpx;
+            border-radius: 6rpx;
+            visibility:hidden;
+        }
+        &-table {
+            display:flex;
+            width: 656rpx;
+            height: 70rpx;
+            margin: auto;
+            padding-top:19rpx;
+            border-bottom: 4rpx solid #f3f1f1;
+            &-title {
+                margin-right:20rpx;
+                width: 259rpx;
+                border-right: 2rpx solid #f3f1f1;
+                height:70rpx;
+                position: relative;
+                &-left {
+                    position: absolute;
+                    font-size: 22rpx;
+                    color: #666666;
+                    right:12rpx;
+                    top:2rpx;
+                }
+                &-right {
+                    position: absolute;
+                    font-size: 22rpx;
+                    color: #666666;
+                    left: 15rpx;
+                }
+                &-mid {
+                    margin:auto;
+                    width:244rpx;
+                    height:3rpx;
+                    transform:rotate(13deg);
+                    margin-top:38rpx;
+                    background:#f3f1f1;
+                }
+            }
+            &-yeartitle {
+                width: 48rpx;
+                margin-left: 15rpx;
+                margin-right: 15rpx;
+                font-size:22rpx;
+                color: #666666;
+                text-align: center;
+                height: 70rpx;
+                line-height: 70rpx;
+            }
+        }
+        &-line {
+            display:flex;
+            width: 656rpx;
+            height: 70rpx;
+            border-bottom: 3rpx solid #f3f1f1;
+            margin:auto;
+            &-title {
+                overflow:hidden;
+                margin-right: 20rpx;
+                width: 259rpx;
+                border-right: 2rpx solid #f3f1f1;
+                text-align: center;
+                font-size:24rpx;
+                line-height: 70rpx;
+                height: 70rpx;
+                color: #666666;
+                text-overflow:ellipsis;
+                white-space:nowrap;
+            }
+            &-show {
+                margin-right: 20rpx;
+                text-align: center;
+                font-size:24rpx;
+                line-height: 70rpx;
+                height: 70rpx;
+                color: #1fbe79;
+                background: #fafafa;
+                position:absolute;
+            }
+            &-content {
+                width: 48rpx;
+                margin-left: 15rpx;
+                margin-right: 15rpx;
+                font-size:22rpx;
+                color: #333333;
+                text-align: center;
+                height: 70rpx;
+                line-height: 70rpx;
+            }
+            &-contentBlack {
+                width: 48rpx;
+                margin-left: 15rpx;
+                margin-right: 15rpx;
+                font-size:22rpx;
+                color: #a9a9a9;
+                text-align: center;
+                height: 70rpx;
+                line-height: 70rpx;
+            }
+            &-detail {
+                margin-left:46rpx;
+                height:70rpx;
+                line-height:70rpx;
+                font-size:22rpx;
+                color:#1fbe79;
+            }
+    }
+    }
+}
+.tip {
+    display: flex;
+    flex-direction: row-reverse;
+    width: 690rpx;
+    height: 24rpx;
+    margin: 27rpx auto 0;
+    &-img {
+        width: 24rpx;
+        height: 24rpx;
+    }
+    &-text {
+        margin-left:9rpx;
+        height: 24rpx;
+        font-size: 22rpx;
+        line-height: 24rpx;
+        color: #a9a9a9;
+    }
+}
+</style>

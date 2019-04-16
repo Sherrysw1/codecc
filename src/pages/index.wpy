@@ -1,0 +1,936 @@
+<template>
+    <view>
+        <i-spin  wx:if="{{loading}}" size="large" fix></i-spin>
+        <view wx:else class="main-view" >
+            <view >
+            <button class="college-button" bindgetuserinfo="collegeClick" open-type="getUserInfo">
+                <image class="college-img" src="../resource/img/college_main_button.png"/>
+                <view class="college-title">查大学</view>
+                <view class="college-intro"><text>学校详情 | 开设专业 | 录取规则</text></view>
+            </button>
+            <button class="major-button" bindgetuserinfo="majorClick" open-type="getUserInfo">
+                <image class="major-img" src="../resource/img/major_main_button.png"/>
+                <view class="major-title">查专业</view>
+                <view class="major-intro"><text>专业详情 | 开设院校 | 就业前景</text></view>
+            </button>
+            <button class="which-college-button" bindgetuserinfo="whichClick" open-type="getUserInfo">
+                <image class="which-college-img" src="../resource/img/which_college_button.png"/>
+                <view class="which-college-title">我能上什么大学</view>
+                <view class="which-college-intro"><text>根据分数智能预测大学录取概率</text></view>
+            </button>
+            <button class="test-button" bindgetuserinfo="testClick" open-type="getUserInfo">
+                <image class="test-img" src="../resource/img/test_range_button.png"/>
+                <view class="test-title">测一测</view>
+                <view class="test-intro"><text>我与理想大学的距离</text></view>
+            </button>
+            </view>
+            <view  wx:if="{{mobileSignal}}" class="mobile-back">
+            <view class="login-box">
+                <image class="login-close" src="../resource/img/login_close.png" @tap="closeMobile{{}}"/>
+                <view class="login-title">手机验证获取更多高考志愿服务</view>
+                <input class="login-input" placeholder="输入手机号" bindblur="mobileInput"/>
+                <view class="login-verify">
+                <input class="login-verify-input" placeholder="输入验证码" bindblur="verifyInput"/>
+                <view class="login-verify-button" @tap="getVerify">{{verifyInfo}}</view>
+                </view>
+                <view class="login-confirm" @tap="register">确定</view>
+            </view>       
+            </view>
+            <view wx:if="{{informationSignal}}" class="information-back">
+                <image class="information-close" src="../resource/img/information_close.png" @tap="closeInfo"/>
+                <view class="information-box">
+                <view class="personInfo">
+                    <view class="person-title">完善信息，为您提供更精准的服务
+                    </view>
+                    <view class="person-item">
+                    <image class="person-icon-position" src="../resource/img/person_position.png"/>
+                    <view class="position-title">
+                        高考地区
+                    </view>
+                    <picker class="position-select" range="{{provinceList}}" value="{{provinceIndex}}" bindchange="provinceChange">
+                        <text style="margin-right:-20rpx">{{provinceList[provinceIndex]}}</text>
+                        <image class="position-select-img" src="../resource/img/person_down.png"/>
+                    </picker>
+                    </view>
+                    <view class="person-item">
+                    <image class="person-icon-subject" src="../resource/img/person_subject.png" />
+                    <view class="position-title" style="margin-left:13.5rpx;">
+                        高考科目
+                    </view>
+                    <picker class="position-select" range="{{subjectList}}" value="{{subjectIndex}}" bindchange="subjectChange">
+                        <text style="margin-right:-20rpx">{{subjectList[subjectIndex]}}</text>
+                        <image class="position-select-img" src="../resource/img/person_down.png"/>
+                    </picker>
+                    </view>
+                    <view class="person-item">
+                    <image class="person-icon-score" src="../resource/img/person_score.png"/>
+                    <view class="position-title" style="margin-left:17rpx;">
+                        我的分数
+                    </view>
+                    <input class="position-select" placeholder="请输入分数" bindblur="scoreChange" type="number"/>
+                    </view>
+                    <view class="person-item">
+                    <image class="person-icon-major" src="../resource/img/person_major.png"/>
+                    <view class="position-title" style="margin-left:15rpx;">
+                        偏好专业
+                    </view>
+                    <input class="position-select" placeholder="请输入专业" bindblur="majorChange"/>
+                    </view>
+                    <view class="person-item">
+                    <image class="person-icon-college" src="../resource/img/person_college.png"/>
+                    <view class="position-title" style="margin-left:11.5rpx;">
+                        理想院校
+                    </view>
+                    <input class="position-select" placeholder="请输入院校" bindblur="collegeChange"/>
+                    </view>
+                    <form>
+                    <button class="person-button" @tap="updateInfo">
+                        提交
+                    </button>
+                    </form>
+                </view>
+                </view>
+            </view>
+            <i-toast id="toast" />
+        </view>
+    </view>
+</template>
+
+<script>
+const { $Toast } = require('../iview/base/index');
+import wepy from 'wepy';
+import common from '../mixins/common';
+export default class Index extends wepy.page {
+    config = {
+        navigationBarTitleText: '道远高考志愿',
+        usingComponents: {
+            'i-spin': '../iview/spin/index',
+            'van-button': '../vant-weapp/button/index'
+        }
+    }
+    components = {
+    }
+    data = {
+        provinceList: ['请选择地区', '安徽', '澳门', '北京', '重庆', '福建', '甘肃', '广东', '广西', '贵州', '海南', '河北', '河南', '黑龙江', '湖北', '湖南', '吉林', '江苏', '江西', '辽宁', '内蒙古', '宁夏', '青海', '山东', '山西', '陕西', '上海', '四川', '台湾', '天津', '西藏', '香港', '新疆', '云南', '浙江'],
+        subjectList: ['请选择科目', '文科', '理科'],
+        provinceIndex: 0,
+        subjectIndex: 0,
+        score: -1,
+        major: '',
+        college: '',
+        requestUrl: '',
+        mobileSignal: false,
+        informationSignal: false,
+        verifyInfo: '获取验证码',
+        telephone: '',
+        verifyCode: '',
+        verifySignal: false,
+        toCollegeSignal: false,
+        toMajorSignal: false,
+        toWhichSignal: false,
+        toTestSignal: false,
+        loading: false
+    }
+    mixins = [
+        common
+    ]
+    computed = {
+    }
+    methods = {
+        collegeClick (e) {
+            var self = this;
+            self.toCollegeSignal = true;
+            self.toMajorSignal = false;
+            self.toWhichSignal = false;
+            self.toTestSignal = false;
+            if (e.detail.userInfo) {
+                if (this.$parent.globalData.registInfo) {
+                    if (this.$parent.globalData.studentTypeSignal === true) {
+                        this.$parent.globalData.userInfo = e.detail.userinfo;
+                        self.loading = true;
+                        wepy.navigateTo({
+                            url: '/pages/collegeMain'
+                        });
+                    }
+                    else {
+                        self.informationSignal = true;
+                    }
+                }
+                else {
+                    self.mobileSignal = true;
+                }
+            }
+            self.$apply();
+        },
+        majorClick (e) {
+            var self = this;
+            self.toCollegeSignal = false;
+            self.toMajorSignal = true;
+            self.toWhichSignal = false;
+            self.toTestSignal = false;
+            if (e.detail.userInfo) {
+                if (this.$parent.globalData.registInfo) {
+                    if (this.$parent.globalData.studentTypeSignal === true) {
+                        this.$parent.globalData.userInfo = e.detail.userinfo;
+                        wepy.navigateTo({
+                            url: '/pages/majorMain'
+                        });
+                    }
+                    else {
+                        self.informationSignal = true;
+                    }
+                }
+                else {
+                    self.mobileSignal = true;
+                }
+            }
+            self.$apply();
+        },
+        whichClick (e) {
+            let self = this;
+            self.toCollegeSignal = false;
+            self.toMajorSignal = false;
+            self.toWhichSignal = true;
+            self.toTestSignal = false;
+            if (e.detail.userInfo) {
+                if (this.$parent.globalData.registInfo) {
+                    if (this.$parent.globalData.studentTypeSignal === true && this.$parent.globalData.studentScoreSignal === true) {
+                        this.$parent.globalData.userInfo = e.detail.userinfo;
+                        wepy.navigateTo({
+                            url: '/pages/predictCollege'
+                        });
+                    }
+                    else {
+                        $Toast({
+                            content: '请输入分数',
+                            type: 'warning'
+                        });
+                        self.informationSignal = true;
+                    }
+                }
+                else {
+                    self.mobileSignal = true;
+                }
+            }
+            self.$apply();
+        },
+        testClick (e) {
+            let self = this;
+            self.toCollegeSignal = false;
+            self.toMajorSignal = false;
+            self.toWhichSignal = true;
+            self.toTestSignal = false;
+            if (e.detail.userInfo) {
+                if (this.$parent.globalData.registInfo) {
+                    if (this.$parent.globalData.studentTypeSignal === true && this.$parent.globalData.studentScoreSignal === true) {
+                        this.$parent.globalData.userInfo = e.detail.userinfo;
+                        wepy.navigateTo({
+                            url: '/pages/testCollege'
+                        });
+                    }
+                    else {
+                        $Toast({
+                            content: '请输入分数',
+                            type: 'warning'
+                        });
+                        self.informationSignal = true;
+                    }
+                }
+                else {
+                    self.mobileSignal = true;
+                }
+            }
+        },
+        async getVerify () {
+            var self = this;
+            if (self.verifyInfo === '获取验证码') {
+                var time = 60;
+                var loop = setInterval(function() {
+                    time--;
+                    self.verifyInfo = time + '秒后获取';
+                    self.$apply();
+                    if (time === 1) {
+                        clearInterval(loop);
+                        self.verifyInfo = '获取验证码';
+                        self.$apply();
+                    }
+                }, 1000);
+            }
+            else {
+                return;
+            }
+            const resCode = await this.request({
+                url: this.requestUrl + '/gkzywx/wxUser/wxSendMsgCode.do',
+                method: 'POST',
+                header: {
+                    'content-type': 'application/json',
+                    'cookie': 'JSESSIONID=' + this.$parent.globalData.sessionId
+                },
+                data: {
+                    phone: self.telephone
+                }
+            }, false).catch(err => {
+                console.log(err);
+            });
+            if (resCode.status === 0) {
+                $Toast({
+                    content: resCode.data,
+                    type: 'success'
+                });
+            }
+            else {
+                $Toast({
+                    content: resCode.msg,
+                    type: 'error'
+                });
+            }
+        },
+        mobileInput (e) {
+            var self = this;
+            self.telephone = e.detail.value;
+            self.$apply();
+        },
+        async verifyInput (e) {
+            var self = this;
+            self.verifyCode = e.detail.value;
+            const resVerify = await this.request({
+                url: this.requestUrl + '/gkzywx/wxUser/wxVerifyMsgCode.do',
+                method: 'POST',
+                header: {
+                    'content-type': 'application/json',
+                    'cookie': 'JSESSIONID=' + this.$parent.globalData.sessionId
+                },
+                data: {
+                    code: self.verifyCode
+                }
+            }, false).catch(err => {
+                console.log(err);
+            });
+            if (resVerify.status === 0) {
+                self.verifySignal = true;
+                $Toast({
+                    content: resVerify.msg,
+                    type: 'success'
+                });
+            }
+            else {
+                $Toast({
+                    content: resVerify.msg,
+                    type: 'error'
+                });
+            }
+            self.$apply();
+        },
+        async register () {
+            var self = this;
+            if (self.verifySignal) {
+                const resRegist = await this.request({
+                    url: this.requestUrl + '/gkzywx/wxUser/wxRegister.do',
+                    method: 'POST',
+                    header: {
+                        'content-type': 'application/json',
+                        'cookie': 'JSESSIONID=' + this.$parent.globalData.sessionId
+                    },
+                    data: {
+                        unionId: this.$parent.globalData.unionId,
+                        openId: this.$parent.globalData.openId,
+                        nickName: this.$parent.globalData.userInfo.nickName,
+                        province: this.$parent.globalData.userInfo.province,
+                        city: this.$parent.globalData.userInfo.city,
+                        country: this.$parent.globalData.userInfo.country,
+                        language: this.$parent.globalData.userInfo.language,
+                        gender: this.$parent.globalData.userInfo.gender,
+                        avatarUrl: this.$parent.globalData.userInfo.avatarUrl,
+                        phone: self.telephone
+                    }
+                }, false).catch(err => {
+                    console.log(err);
+                });
+                if (resRegist.status === 0) {
+                    self.verifySignal = true;
+                    $Toast({
+                        content: resRegist.msg,
+                        type: 'success'
+                    });
+                    self.mobileSignal = false;
+                    this.$parent.globalData.registInfo = true;
+                    self.$apply();
+                    const resLogin = await wepy.login();
+                    const resLoginAgain = await this.request({
+                        url: self.requestUrl + '/gkzywx/wxUser/wxLogin.do',
+                        method: 'POST',
+                        header: {
+                            'content-type': 'application/json'
+                        },
+                        data: {
+                            'jsCode': resLogin.code
+                        }
+                    }, false).catch(err => {
+                        console.log(err);
+                    });
+                    if (resLoginAgain.status === 0) {
+                        this.$parent.globalData.registInfo = true;
+                        this.$parent.globalData.openId = resLoginAgain.data.openId;
+                        this.$parent.globalData.sessionId = resLoginAgain.data.sessionId;
+                        const resDetail = await this.request({
+                            url: self.requestUrl + '/gkzywx/wxUser/getWxUserDetail.do',
+                            method: 'POST',
+                            header: {
+                                'content-type': 'application/json',
+                                'cookie': 'JSESSIONID=' + this.$parent.globalData.sessionId
+                            },
+                            data: {
+                            }
+                        }, false).catch(err => {
+                            console.log(err);
+                        });
+                        if (resDetail.status === 0) {
+                            this.$parent.globalData.userInfoFromServer = resDetail.data;
+                            if (resDetail.data.studentType !== '--') {
+                                this.$parent.globalData.studentTypeSignal = true;
+                            }
+                            else if (resDetail.data.studentScoreSignal !== -1) {
+                                this.$parent.globalData.studentScoreSignal = true;
+                            }
+                        }
+                    }
+                    else {
+                        this.$parent.globalData.openId = resLoginAgain.data.openId;
+                        this.$parent.globalData.sessionId = resLoginAgain.data.sessionId;
+                        if (resLoginAgain.status === 5) {
+                            this.$parent.globalData.registInfo = false;
+                        }
+                    }
+                }
+                else {
+                    $Toast({
+                        content: resRegist.msg,
+                        type: 'error'
+                    });
+                }
+            }
+            else {
+                $Toast({
+                    content: '请输入正确的手机号或验证码',
+                    type: 'warning'
+                });
+            }
+        },
+        closeMobile () {
+            var self = this;
+            self.mobileSignal = false;
+            self.$apply();
+        },
+        closeInfo () {
+            var self = this;
+            self.informationSignal = false;
+            self.$apply();
+        },
+        provinceChange (e) {
+            var self = this;
+            self.provinceIndex = e.detail.value;
+            self.$apply();
+        },
+        subjectChange (e) {
+            var self = this;
+            self.subjectIndex = e.detail.value;
+            self.$apply();
+        },
+        scoreChange (e) {
+            var self = this;
+            self.score = e.detail.value;
+            self.$apply();
+        },
+        majorChange (e) {
+            var self = this;
+            self.major = e.detail.value;
+            self.$apply();
+        },
+        collegeChange (e) {
+            var self = this;
+            self.college = e.detail.value;
+            self.$apply();
+        },
+        async updateInfo () {
+            var self = this;
+            if (self.toWhichSignal === true || self.toTestSignal === true) {
+                if (self.provinceIndex === 0) {
+                    $Toast({
+                        content: '请选择高考地区',
+                        type: 'warning'
+                    });
+                    return;
+                }
+                if (self.subjectIndex === 0) {
+                    $Toast({
+                        content: '请选择科目',
+                        type: 'warning'
+                    });
+                    return;
+                }
+                if (self.score === -1) {
+                    $Toast({
+                        content: '请输入分数',
+                        type: 'warning'
+                    });
+                    return;
+                }
+            }
+            else {
+                if (self.provinceIndex === 0) {
+                    $Toast({
+                        content: '请选择高考地区',
+                        type: 'warning'
+                    });
+                    return;
+                }
+                if (self.subjectIndex === 0) {
+                    $Toast({
+                        content: '请选择科目',
+                        type: 'warning'
+                    });
+                    return;
+                }
+            }
+            const resUpdate = await this.request({
+                url: self.requestUrl + '/gkzywx/wxUser/updateWxUserStuInfo.do',
+                method: 'POST',
+                header: {
+                    'content-type': 'application/json',
+                    'cookie': 'JSESSIONID=' + this.$parent.globalData.sessionId
+                },
+                data: {
+                    id: this.$parent.globalData.userInfoFromServer.id,
+                    studentProvince: self.provinceList[self.provinceIndex],
+                    studentScore: self.score,
+                    studentType: self.subjectList[self.subjectIndex],
+                    preferMajor: self.major === '' ? '--' : self.major,
+                    preferCollege: self.college === '' ? '--' : self.college
+                }
+            }, false).catch(err => {
+                console.log(err);
+            });
+            if (resUpdate.status === 0) {
+                $Toast({
+                    content: resUpdate.msg,
+                    type: 'success'
+                });
+                const resUserDetail = await this.request({
+                    url: self.requestUrl + '/gkzywx/wxUser/getWxUserDetail.do',
+                    method: 'POST',
+                    header: {
+                        'content-type': 'application/json',
+                        'cookie': 'JSESSIONID=' + this.$parent.globalData.sessionId
+                    },
+                    data: {
+                    }
+                }, false).catch(err => {
+                    console.log(err);
+                });
+                if (resUserDetail.status === 0) {
+                    this.$parent.globalData.userInfoFromServer = resUserDetail.data;
+                    if (resUserDetail.data.studentType !== '--') {
+                        this.$parent.globalData.studentTypeSignal = true;
+                    }
+                    if (resUserDetail.data.studentScore !== -1) {
+                        this.$parent.globalData.studentScoreSignal = true;
+                    }
+                }
+                if (self.toCollegeSignal === true) {
+                    self.informationSignal = false;
+                    wepy.navigateTo({
+                        url: '/pages/collegeMain'
+                    });
+                    return;
+                }
+                if (self.toMajorSignal === true) {
+                    self.informationSignal = false;
+                    wepy.navigateTo({
+                        url: '/pages/majorMain'
+                    });
+                }
+                if (self.toWhichSignal === true) {
+                    self.informationSignal = false;
+                    wepy.navigateTo({
+                        url: '/pages/predictCollege'
+                    });
+                }
+                if (self.toTestSignal === true) {
+                    self.informationSignal = false;
+                    wepy.navigateTo({
+                        url: '/pages/testCollege'
+                    });
+                }
+            }
+            else {
+                $Toast({
+                    content: resUpdate.msg,
+                    type: 'error'
+                });
+            }
+        }
+    }
+    events = {}
+    onLoad() {
+        let self = this;
+        self.requestUrl = this.$parent.globalData.requestUrl;
+        this.$parent.getUserInfo(function (userInfo) {
+            if (userInfo) {
+                self.userInfo = userInfo;
+            }
+            self.$apply();
+        });
+        self.$apply();
+    }
+    onShow() {
+        let self = this;
+        self.loading = true;
+        self.$apply();
+        setTimeout(() => {
+            self.loading = false;
+            self.$apply();
+        }, 500);
+    }
+  }
+</script>
+<style lang="less" scoped>
+  .userinfo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .userinfo-avatar {
+    width: 80rpx;
+    height: 80rpx;
+    border-radius: 50%;
+  }
+  .userinfo-nickname {
+    color: #aaa;
+  }
+  // 首页view
+  .main-view {
+    width:100%;
+    height:100%;
+    text-align: center;
+    border-top:1rpx solid rgb(224, 224, 224);
+  }
+  // 首页查大学button
+  .college-button {
+    width:695rpx;
+    height:201rpx;
+    margin:30rpx auto 0;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    border-radius: 8px !important;
+  }
+  .college-img {
+    width:100%;
+    height:100%;
+  }
+  .college-title{
+    height:50rpx;
+    font-size: 50rpx;
+    font-family: "PingFangSC";
+    color: rgb(255, 255, 255);
+    margin-top:-192rpx;
+    padding-left:92rpx;
+    position:absolute;
+  }
+  .college-intro{
+    height:28rpx;
+    font-size:28rpx;
+    font-family: "PingFangSC";
+    color: rgba(255, 255, 255, 0.612);
+    margin-top:-102rpx;
+    position:absolute;
+    padding-left:30rpx;
+  }
+
+  // 首页查专业button
+  .major-button {
+    width:695rpx;
+    height:201rpx;
+    margin:30rpx auto 0;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    border-radius: 8px !important;
+  }
+  .major-img {
+    width:100%;
+    height:100%;
+  }
+  .major-title{
+    height:50rpx;
+    font-size: 50rpx;
+    font-family: "PingFangSC";
+    color: rgb(255, 255, 255);
+    margin-top:-192rpx;
+    padding-left:92rpx;
+    position:absolute;
+  }
+  .major-intro{
+    height:28rpx;
+    font-size:28rpx;
+    font-family: "PingFangSC";
+    color: rgba(255, 255, 255, 0.612);
+    margin-top:-102rpx;
+    position:absolute;
+    padding-left:30rpx;
+  }
+  //  首页可以上什么大学
+  .which-college-button {
+    width:695rpx;
+    height:201rpx;
+    margin:30rpx auto 0;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    border-radius: 8px !important;
+  }
+  .which-college-img {
+    width:100%;
+    height:100%;
+  }
+  .which-college-title{
+    height:50rpx;
+    font-size: 50rpx;
+    font-family: "PingFangSC";
+    color: rgb(255, 255, 255);
+    margin-top:-206rpx;
+    padding-left:30rpx;
+    position:absolute;
+  }
+  .which-college-intro{
+    height:32rpx;
+    font-size:32rpx;
+    font-family: "PingFangSC";
+    color: rgb(217, 239, 253);
+    margin-top:-130rpx;
+    position:absolute;
+    padding-left:30rpx;
+  }
+  //  首页测一测按钮
+  .test-button {
+    width:695rpx;
+    height:201rpx;
+    margin:30rpx auto 0;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    border-radius: 8px !important;
+  }
+  .test-img {
+    width:100%;
+    height:100%;
+  }
+  .test-title{
+    height:50rpx;
+    font-size: 50rpx;
+    font-family: "PingFangSC";
+    color: rgb(255, 255, 255);
+    margin-top:-206rpx;
+    padding-left:30rpx;
+    position:absolute;
+  }
+  .test-intro{
+    height:32rpx;
+    font-size:32rpx;
+    font-family: "PingFangSC";
+    color: rgb(217, 239, 253);
+    margin-top:-130rpx;
+    position:absolute;
+    padding-left:30rpx;
+  }
+  .mobile-back {
+    top:0;
+    bottom:0;
+    background-color: rgba(4, 4, 4,0.8);
+    width:100%;
+    position:absolute;
+  }
+  .login-box {
+    width:100%;
+    height:513rpx;
+    background:white;
+    bottom:0;
+    position:absolute;    
+  }
+  .login-close {
+    width:33rpx;
+    height:33rpx;
+    margin-top:27rpx;
+    margin-left:685rpx;
+  }
+  .login-title {
+    text-align:center;
+    font-size:36rpx;
+    margin-top:10rpx;
+  }
+  .login-input {
+    width:524rpx;
+    height:84rpx;
+    border:2rpx solid #a0a0a0;
+    border-radius:6rpx;
+    padding-left:30rpx;
+    font-size:30rpx;
+    line-height:84rpx;
+    color:#b4b3b3;
+    text-align:left;
+    margin:30rpx auto 0;
+  }
+  .login-verify {
+    width:558rpx;
+    height:84rpx;
+    display:flex;
+    margin:30rpx auto 0;
+  }
+  .login-verify-input {
+    width:248rpx;
+    height:88rpx;
+    border:2rpx solid rgb(160,160,160);
+    border-radius:6rpx;
+    padding-left:30rpx;
+    font-size:30rpx;
+    line-height:84rpx;
+    color:rgb(180,179,179);
+    text-align: left;
+  }
+  .login-verify-button {
+    width:252rpx;
+    height:88rpx;
+    border-radius:6rpx;
+    font-size:30rpx;
+    line-height:84rpx;
+    color:rgb(180,179,179);
+    text-align: center;
+    margin-left:28rpx;
+    color:white;
+    background:#1fbe79;
+  }
+  .login-confirm {
+    width:558rpx;
+    height:84rpx;
+    color:white;
+    background:#1fbe79;
+    line-height:84rpx;
+    font-size:36rpx;
+    border-radius: 6rpx;
+    letter-spacing: 5rpx;
+    margin:30rpx auto 0;
+  }
+  // 填写信息
+  .information-back {
+    top:0;
+    bottom:0;
+    background-color: rgba(4, 4, 4,0.8);
+    width:100%;
+    position:absolute;
+  }
+  .information-box {
+    width:694rpx;
+    height:805rpx;
+    background:white;
+    border-radius:20rpx;
+    margin:26rpx auto 0;
+  }
+  .information-close {
+    width:47rpx;
+    height:47rpx;
+    margin-top:47rpx;
+    margin-left:634rpx;
+  }
+// 个人信息修改
+.personInfo {
+  width:698rpx;
+  height:580rpx;
+  margin:30rpx auto 0;
+  border-radius:30rpx;
+  padding-top:48rpx;
+}
+.person-title {
+  font-size:36rpx;
+  color:rgb(51,51,51);
+  letter-spacing: 2rpx;
+  margin-bottom:53rpx;
+}
+// 每一个item
+.person-item {
+  width:100%;
+  height:60rpx;
+  margin-top:43rpx;
+  display:flex;
+}
+.position-title {
+  line-height:60rpx;
+  font-size:30rpx;
+  margin-left:18rpx;
+  color:#4f4f4f;
+  letter-spacing: 3rpx;
+}
+.position-select {
+  width:371rpx;
+  height:60rpx;
+  margin-left:60rpx;
+  border-radius: 10rpx;
+  background:#eeeeee;
+  font-size:28rpx;
+  line-height:60rpx;
+  color:rgb(51,51,51);
+  letter-spacing: 2rpx;
+}
+.position-select-img {
+  width:23rpx;
+  height:13rpx;
+  margin-top:23.5rpx;
+  float:right;
+  margin-right:20rpx;
+}
+.person-icon-position {
+  width:30rpx;
+  height:44rpx;
+  margin-top:8rpx;
+  margin-left:50rpx;
+}
+.person-icon-subject {
+  width:39rpx;
+  height:38rpx;
+  margin-top:11rpx;
+  margin-left:45.5rpx;
+}
+.person-icon-score {
+  width:32rpx;
+  height:38rpx;
+  margin-top:11rpx;
+  margin-left:49rpx;
+}
+.person-icon-major {
+  width:36rpx;
+  height:41rpx;
+  margin-top:9.5rpx;
+  margin-left:47rpx;
+}
+.person-icon-college {
+  width:43rpx;
+  height:39rpx;
+  margin-top:10.5rpx;
+  margin-left:43.5rpx;
+}
+// 确认修改按钮
+.person-button {
+  width:630rpx;
+  height:83rpx;
+  border-radius: 10rpx;
+  background:#1fbe79;
+  margin:49rpx auto 0;
+  text-align:center;
+  color:white;
+  font-size:32rpx;
+  line-height:83rpx;
+  letter-spacing: 5rpx;
+}
+.person-tip {
+  width:100%;
+  font-size:30rpx;
+  margin-top:25rpx;
+  color:#999999;
+  text-align: center;
+}
+</style>

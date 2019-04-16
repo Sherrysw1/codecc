@@ -1,0 +1,34 @@
+<template>
+    <view class="box">
+
+    </view>
+</template>
+<script>
+import wepy from 'wepy';
+import common from '../../mixins/common';
+export default class majorCard extends wepy.component {
+    data = {
+    }
+    props = {
+    }
+    mixins = [
+        common
+    ]
+    options = {
+    }
+    methods = {
+    }
+    events = {
+    }
+    async onLoad () {
+    }
+}
+</script>
+<style lang="less" scoped>
+.box {
+    width: 100%;
+    height: 80rpx;
+    background: #f8f8f8;
+}
+
+</style>

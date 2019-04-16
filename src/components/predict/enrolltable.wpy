@@ -1,0 +1,301 @@
+<template>
+   <view class="tag-box-tableback">
+        <view class="tag-box-table">
+            <view class="tag-box-table-title">
+                <view class="tag-box-table-title-left">专业名称</view>
+                <view class="tag-box-table-title-mid"></view>
+                <view class="tag-box-table-title-right">录取年份</view>
+            </view>
+            <view class="tag-box-table-predict"> <text>2019\n预估分数</text> </view>
+            <view class="tag-box-table-yeartitle"> 2017 </view>
+            <view class="tag-box-table-yeartitle"> 2016 </view>
+            <view class="tag-box-table-yeartitle"> 2015 </view>
+        </view>
+        <view wx:for="{{majorList}}" wx:for-item="majorItem" wx:for-index="index" wx:key="index">
+            <view class="tag-box-line" bindtouchstart="showNameChangeStart" bindtouchend="showNameChangeEnd" data-name="{{majorItem.majorName}}" data-index="{{index}}">
+                <view wx:if="{{showIndex === index}}" class="tag-box-line-show">{{majorItem.majorName}}</view>
+                <view class="tag-box-line-title">{{majorItem.majorName}}
+                </view>
+                <view class="tag-box-line-predict">{{predictScore}}</view>
+                <view class="tag-box-line-content">{{majorItem.score2017}}</view>
+                <view class="tag-box-line-content">{{majorItem.score2016}}</view>
+                <view class="tag-box-line-content">{{majorItem.score2015}}</view>                
+            </view>
+        </view>
+    </view>
+</template>
+<script>
+import wepy from 'wepy';
+import common from '../../mixins/common';
+export default class scoreTable extends wepy.component {
+    data = {
+        schoolName: '',
+        studentProvince: '',
+        studentType: '',
+        predictScore: '',
+        studentScore: '',
+        majorList: [],
+        showName: false,
+        showIndex: -1
+    }
+    props = {
+    }
+    mixins = [
+        common
+    ]
+    events = {
+    }
+    methods = {
+        showNameChangeStart (e) {
+            let self = this;
+            console.log(111);
+            if (e.currentTarget.dataset.name.length > 11) {
+                self.showIndex = parseInt(e.currentTarget.dataset.index);
+            }
+            self.$apply();
+        },
+        showNameChangeEnd (e) {
+            let self = this;
+            setTimeout(() => {
+                self.showIndex = -1;
+                self.$apply();
+            }, 2000);
+        }
+    }
+    async onLoad () {
+        let self = this;
+        this.getUser();
+        console.log('adfgggg', self.globalData, self.userInfoFromServer);
+        await this.requestPredictEnroll();
+        self.$apply();
+    }
+    async getUser () {
+        let self = this;
+        console.log('global', this.$parent.$parent.globalData);
+        self.schoolName = this.$parent.schoolName;
+        self.studentProvince = this.$parent.studentProvince;
+        self.studentType = this.$parent.studentType;
+        self.predictScore = this.$parent.predictScore;
+        self.studentScore = this.$parent.$parent.globalData.userInfoFromServer.studentScore;
+        self.$apply();
+    }
+    async requestPredictEnroll () {
+        let self = this;
+        const resScore = await this.request({
+            url: self.requestUrl + '/gkzywx/collegePredict/getMajorEnrollListByStuInfo.do',
+            method: 'POST',
+            header: {
+                'content-type': 'application/json',
+                'cookie': 'JSESSIONID=' + this.$parent.globalData.sessionId
+            },
+            data: {
+                'schoolName': self.schoolName,
+                'studentProvince': self.studentProvince,
+                'studentType': self.studentType
+            }
+        }, false).catch(err => {
+            console.log(err);
+        });
+        if (resScore.status === 0) {
+            let majorObj = {};
+            let majorList = [];
+            majorObj = resScore.data;
+            Object.keys(majorObj).forEach(element => {
+                let major = {
+                    score2018: '--',
+                    score2017: '--',
+                    score2016: '--',
+                    score2015: '--'
+                };
+                major.majorName = element;
+                majorObj[element].forEach(year => {
+                    year.year === '2018' ? year.minscore !== -1 ? major.score2018 = year.minscore : major.score2018 = '--' : console.log('');
+                    year.year === '2017' ? year.minscore !== -1 ? major.score2017 = year.minscore : major.score2017 = '--' : console.log('');
+                    year.year === '2016' ? year.minscore !== -1 ? major.score2016 = year.minscore : major.score2016 = '--' : console.log('');
+                    year.year === '2015' ? year.minscore !== -1 ? major.score2015 = year.minscore : major.score2015 = '--' : console.log('');
+                });
+                majorList.push(major);
+            });
+            self.majorList = majorList;
+            self.$apply();
+        }
+    }
+}
+</script>
+<style lang="less" scoped>
+.tag {
+    display:flex;
+    width:715rpx;
+    margin:auto;
+    flex-wrap:wrap;
+    &-box {
+        margin-left: 13rpx;
+        margin-right: 13rpx;
+        margin-bottom: 22rpx;
+        &-item {
+            height: 70rpx;
+            line-height: 70rpx;
+            color: #333333;
+            font-size: 28rpx;
+            background: #eefbf5;
+            text-align: center;
+            border-radius: 6rpx;
+        }
+        &-selected {
+            height: 70rpx;
+            line-height: 70rpx;
+            color: #ffffff;
+            font-size: 28rpx;
+            background: #1fbe79;
+            text-align: center;
+            border-radius: 6rpx;
+        }
+        &-tra {
+            margin:7rpx auto 0;
+            width: 0;
+            height: 0;
+            border-top: 0;
+            border-left: 21rpx solid transparent;
+            border-right: 21rpx solid transparent;
+            border-bottom: 21rpx solid #fafafa;
+        }
+        &-tableback {
+            position:absolute;
+            left:30rpx;
+            width: 689rpx;
+            background: #fafafa;
+            border-radius: 6rpx;
+            margin-bottom:30rpx;
+            padding-bottom:8px;
+        }
+        &-table {
+            display:flex;
+            width: 656rpx;
+            height: 70rpx;
+            margin: auto;
+            padding-top:19rpx;
+            border-bottom: 4rpx solid #f3f1f1;
+            &-title {
+                margin-right:20rpx;
+                width: 259rpx;
+                border-right: 2rpx solid #f3f1f1;
+                height:70rpx;
+                position: relative;
+                &-left {
+                    position: absolute;
+                    font-size: 22rpx;
+                    color: #666666;
+                    right:12rpx;
+                    top:2rpx;
+                }
+                &-right {
+                    position: absolute;
+                    font-size: 22rpx;
+                    color: #666666;
+                    left: 15rpx;
+                }
+                &-mid {
+                    margin:auto;
+                    width:244rpx;
+                    height:3rpx;
+                    transform:rotate(13deg);
+                    margin-top:38rpx;
+                    background:#f3f1f1;
+                }
+            }
+            &-predict {
+                width: 94rpx;
+                box-sizing: border-box;
+                margin-left: 15rpx;
+                margin-right: 15rpx;
+                padding-top:10rpx;
+                font-size:22rpx;
+                color: #666666;
+                text-align: center;
+                height: 70rpx;
+                line-height: 22rpx; 
+            }
+            &-yeartitle {
+                width: 48rpx;
+                margin-left: 15rpx;
+                margin-right: 15rpx;
+                font-size:22rpx;
+                color: #666666;
+                text-align: center;
+                height: 70rpx;
+                line-height: 70rpx;
+            }
+        }
+        &-line {
+            display:flex;
+            width: 656rpx;
+            height: 70rpx;
+            border-bottom: 3rpx solid #f3f1f1;
+            margin:auto;
+            &-title {
+                overflow:hidden;
+                margin-right: 20rpx;
+                width: 259rpx;
+                border-right: 2rpx solid #f3f1f1;
+                text-align: center;
+                font-size:24rpx;
+                line-height: 70rpx;
+                height: 70rpx;
+                color: #666666;
+                text-overflow:ellipsis;
+                white-space:nowrap;
+            }
+            &-show {
+                margin-right: 20rpx;
+                text-align: center;
+                font-size:24rpx;
+                line-height: 70rpx;
+                height: 70rpx;
+                color: #1fbe79;
+                background: #fafafa;
+                position:absolute;
+            }
+            &-predict {
+                width: 94rpx;
+                box-sizing: border-box;
+                margin-left: 15rpx;
+                margin-right: 15rpx;
+                font-size:28rpx;
+                color: #1fbe79;
+                text-align: center;
+                height: 70rpx;
+                line-height: 70rpx; 
+                font-weight: bold;
+            }
+            &-content {
+                width: 48rpx;
+                margin-left: 15rpx;
+                margin-right: 15rpx;
+                font-size:26rpx;
+                color: #333333;
+                text-align: center;
+                height: 70rpx;
+                line-height: 70rpx;
+            }
+            &-contentBlack {
+                width: 48rpx;
+                margin-left: 15rpx;
+                margin-right: 15rpx;
+                font-size:22rpx;
+                color: #a9a9a9;
+                text-align: center;
+                height: 70rpx;
+                line-height: 70rpx;
+            }
+            &-detail {
+                margin-left:46rpx;
+                height:70rpx;
+                line-height:70rpx;
+                font-size:22rpx;
+                color:#1fbe79;
+            }
+        }
+    }
+}
+
+</style>

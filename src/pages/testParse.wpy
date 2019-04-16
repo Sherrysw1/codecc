@@ -1,0 +1,25 @@
+<template>
+    <view class='container'>
+    </view>
+</template>
+
+<script>
+    import wepy from 'wepy';
+    export default class PieChartPage extends wepy.page {
+        config = {
+            navigationBarTitleText: ''
+        };
+        components = {
+        };
+        data = {
+        };
+        onLoad() {
+        }
+    }
+</script>
+
+<style>
+.back{
+    color: #6a7985
+}
+</style>

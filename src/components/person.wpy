@@ -1,0 +1,116 @@
+<template>
+    <view class="college-person" @tap="personClick">
+        <view class="person-avatar">
+            <image class="person-avatar-img" src="{{avatarUrl}}"/>
+        </view>
+        <view class="person-province">
+            {{province}}{{subject}}
+        </view>
+        <view class="person-score">
+            {{score}}
+        </view>
+        <view class="person-edit">
+            <image class="person-edit-img" src="../resource/img/collegeMain_edit_icon.png"/>
+            <input class="search-line-input"/>
+        </view>
+    </view>
+</template>
+<script>
+import wepy from 'wepy';
+import common from '../mixins/common';
+export default class Person extends wepy.component {
+    data = {
+        avatarUrl: '',
+        province: '',
+        subject: '',
+        score: '',
+        currentUrl: ''
+    }
+    props = {
+    }
+    mixins = [
+        common
+    ]
+    methods = {
+        personClick() {
+            wepy.redirectTo({
+                url: `/pages/personInfo?currentUrl=${this.currentUrl}`
+            });
+            // wepy.navigateTo({
+            //     url: `/pages/personInfo?currentUrl=${this.currentUrl}`
+            // });
+        }
+    }
+    async onLoad () {
+        let self = this;
+        const res = await this.request({
+            url: this.requestUrl + '/gkzywx/wxUser/getWxUserDetail.do',
+            method: 'POST',
+            header: {
+                'content-type': 'application/json',
+                'cookie': 'JSESSIONID=' + this.$parent.$parent.globalData.sessionId
+            },
+            data: {
+            }
+        }, false).catch(err => {
+            console.log(err);
+        });
+        if (res.status === 0) {
+            self.avatarUrl = res.data.avatarUrl;
+            self.subject = res.data.studentType;
+            self.score = res.data.studentScore;
+            self.province = res.data.studentProvince;
+        }
+        console.log('current', getCurrentPages());
+        self.currentUrl = getCurrentPages()[getCurrentPages().length - 1].route;
+        self.currentUrl = `/${self.currentUrl}`;
+        console.log('current', self.currentUrl);
+        self.$apply();
+    }
+}
+</script>
+<style lang="less" scoped>
+//头像信息栏
+.college-person {
+    display:flex;
+    width:100%;
+    height:114rpx;
+    background:white;
+}
+.person-avatar {
+    width:76rpx;
+    height:76rpx;
+    margin-top:19rpx;
+    margin-left:26rpx;
+    border-radius: 38rpx;
+    overflow: hidden;
+}
+.person-avatar-img {
+    width:100%;
+    height:100%;
+}
+.person-province {
+    height:114rpx;
+    line-height:114rpx;
+    font-size:25rpx;
+    color:rgb(51, 51, 51);
+    margin-left:20rpx;
+}
+.person-score {
+    height:114rpx;
+    line-height:114rpx;
+    font-size:25rpx;
+    color:rgb(51, 51, 51);
+    margin-left:27rpx;
+}
+.person-edit {
+    width:24rpx;
+    height:26rpx;
+    margin-left:15rpx;
+    line-height:114rpx;
+}
+.person-edit-img {
+    width:100%;
+    height:100%;
+}
+</style>

@@ -1,0 +1,317 @@
+<template>
+  <view class="main">
+      <i-spin  wx:if="{{loading}}" size="large" fix></i-spin>
+      <view wx:else>
+            <view class="header">
+                <image class="header-img" src="../../resource/img/college_back_new.png"/>
+            </view>
+            <view class="body-box" @tap="toCollegeDetail({{collegeInfoDetail.schoolname}},{{collegeInfoDetail.id}})">
+                <view class="intro">
+                    <image class="intro-badge" src="{{collegeInfoDetail.schoollogo}}"/>
+                    <view class="intro-detail">
+                        <view class="intro-title">
+                            <view>{{collegeInfoDetail.schoolname}}</view>
+                            <image class="intro-title-img" src="../../resource/img/toCollege.png"/>
+                        </view>
+                        <view class="intro-tag">
+                            <view wx:if="{{collegeInfoDetail.f985}}" class="intro-tag-each">985</view>
+                            <view wx:if="{{collegeInfoDetail.f211}}" class="intro-tag-each">211</view>
+                            <view wx:if="{{collegeInfoDetail.firstclassattr}}" class="intro-tag-each">{{collegeInfoDetail.firstclassattr}}</view>
+                        </view>
+                    </view>
+                    <view class="intro-probability">
+                        录取概率
+                        <view class="intro-probability-score">{{probability}}%</view>
+                    </view>
+                </view>
+            </view>
+        <!-- <view class="intro-box">
+            <image class="intro-left" src="{{collegeInfoDetail.schoollogo}}"/>
+            <view class="intro-right">
+                <view class="intro-firstLine">
+                    {{collegeInfoDetail.schoolname}}<text style="font-size:24rpx;color:#b4b4b4;padding-left:22rpx">(报考代码10010)</text>
+                </view>
+                <view class="intro-secondLine">
+                    <image class="intro-secondLine-img" src="../../resource/img/collegeDetail_position.png"/>
+                    <view class="intro-secondLine-title">{{collegeInfoDetail.schoollocation}}</view>
+                </view>
+                <view class="intro-thirdLine">
+                <view wx:if="{{collegeInfoDetail.f985}}" class="intro-tag">985</view>
+                <view wx:if="{{collegeInfoDetail.f211}}" class="intro-tag">211</view>
+                </view>
+            </view>
+        </view>
+        <view class="intro-main">
+            <view class="intro-main-item">
+                <view class="intro-main-title"> {{collegeInfoDetail.schoolrank}}</view>
+                <view class="intro-main-subtitle">排名</view>
+            </view>
+            <view class="intro-main-border"></view>
+            <view class="intro-main-item">
+                <view class="intro-main-title"> {{collegeInfoDetail.schooltype}}</view>
+                <view class="intro-main-subtitle">类型</view>
+            </view>
+            <view class="intro-main-border"></view>
+            <view class="intro-main-item">
+                <view class="intro-main-title"> {{collegeInfoDetail.schoollevel}}</view>
+                <view class="intro-main-subtitle">属性</view>
+            </view>
+            <view class="intro-main-border"></view>
+            <view class="intro-main-item">
+                <view class="intro-main-title"> {{collegeInfoDetail.masternum}}</view>
+                <view class="intro-main-subtitle">研究生点</view>
+            </view>
+        </view> -->
+        <view class="detail">
+            <view class="detail-title">
+                <view class="detail-title-border"></view>
+                <view class="detail-title-text">概率分析</view>
+            </view>
+            <view class="detail-title">
+                <view class="detail-title-border"></view>
+                <view class="detail-title-text">最低录取分数</view>
+            </view>
+            <scoreTable></scoreTable>
+            <view class="detail-title">
+                <view class="detail-title-border"></view>
+                <view class="detail-title-text">各专业录取分数</view>
+            </view>
+            <enrollTable></enrollTable>
+        </view>
+        <i-toast id="toast" />
+      </view>
+  </view>
+</template>
+<script>
+const { $Toast } = require('../../iview/base/index');
+import wepy from 'wepy';
+import common from '../../mixins/common';
+import tab from '../../components/tab';
+import collegeSearch from '../../components/college/collegesearchmajor';
+import scoreTable from '../../components/predict/scoretable';
+import enrollTable from '../../components/predict/enrolltable';
+export default class collegeDetail extends wepy.page {
+    config = {
+        navigationBarTitleText: 'test',
+        usingComponents: {
+            'i-toast': '../../iview/toast/index',
+            'i-spin': '../../iview/spin/index'
+        }
+    }
+    components = {
+        tab: tab,
+        collegeSearch: collegeSearch,
+        scoreTable: scoreTable,
+        enrollTable: enrollTable
+    }
+    mixins = [
+        common
+    ]
+    data = {
+        loading: true,
+        current: 'tab1',
+        schoolId: 0,
+        requestUrl: null,
+        globalData: null,
+        collegeInfoDetail: null,
+        schoolName: '',
+        probability: '',
+        predictScore: ''
+    }
+    computed = {}
+    watch = {
+    }
+    methods = {
+        toCollegeDetail (name, id) {
+            wepy.navigateTo({
+                url: `/pages/college/collegeDetail?schoolName=${name}&schoolId=${id}`
+            });
+        }
+    }
+    events = {
+        'changeTab': (param) => {
+            this.current = param;
+            console.log(param);
+        }
+    }
+    async onLoad(param) {
+        var self = this;
+        self.schoolId = param.schoolId;
+        self.schoolName = param.schoolName;
+        self.probability = param.probability;
+        self.predictScore = param.predictScore;
+        await this.getPerson();
+        this.requestCollege();
+        wepy.setNavigationBarTitle({
+            title: `${param.schoolName}预测`
+        });
+        setTimeout(() => {
+            self.loading = false;
+            self.$apply();
+        }, 500);
+        self.$apply();
+    }
+    async getPerson () {
+        let self = this;
+        self.requestUrl = this.$parent.globalData.requestUrl;
+        self.globalData = this.$parent.globalData;
+        self.studentType = self.globalData.userInfoFromServer.studentType;
+        self.studentProvince = self.globalData.userInfoFromServer.studentProvince;
+        self.$apply();
+    }
+    async requestCollege () {
+        let self = this;
+        const resDetail = await this.request({
+            url: self.requestUrl + '/gkzywx/collegeInfo/getCollegeIntroDetailById.do',
+            method: 'POST',
+            header: {
+                'content-type': 'application/json',
+                'cookie': 'JSESSIONID=' + this.$parent.globalData.sessionId
+            },
+            data: {
+                schoolId: self.schoolId
+            }
+        }, false).catch(err => {
+            console.log(err);
+        });
+        if (resDetail.status === 0) {
+            self.collegeInfoDetail = resDetail.data;
+            self.collegeInfoDetail.schoollogo = 'https://gkzy-1258109256.cos.ap-beijing.myqcloud.com/school-logo/' + self.collegeInfoDetail.schoollogo;
+            self.$apply();
+        }
+        else {
+            $Toast({
+                content: resDetail.msg,
+                type: 'error'
+            });
+        }
+    }
+  }
+</script>
+<style lang="less" scoped>
+.main {
+    border-top:1rpx solid rgb(224, 224, 224);
+    width:100%;
+}
+
+.detail {
+    width: 100%;
+    &-title {
+    display: flex;
+    height: 34rpx;
+    margin-top:22rpx;
+    margin-left: 30rpx;
+    margin-bottom:26rpx;
+    font-weight:bold;
+    &-border {
+        width: 6rpx;
+        height: 32rpx;
+        margin-top: 1rpx;
+        background: #1fbe79;
+    }
+    &-text {
+        margin-left:19rpx;
+        font-size:34rpx;
+        line-height: 34rpx;
+    }
+}
+}
+// ------------------------------新UI
+.header {
+    position: relative;
+    top: 0;
+    width: 750rpx;
+    &-img {
+        width: 750rpx;
+        height: 150rpx;
+    }
+}
+.body-box {
+    position:relative;
+    background:#fdfefe;
+    width:100%;
+    height:100rpx;
+}
+.intro {
+    display: flex;
+    position:absolute;
+    width:690rpx;
+    height:160rpx;
+    border-radius:10rpx;
+    box-shadow:0 5rpx 5rpx 5rpx rgba(222, 225, 231, 0.7);
+    top:-70rpx;
+    margin:auto;
+    background:white;
+    left:30rpx;
+    &-badge {
+        margin: 30rpx;
+        width:100rpx;
+        height: 100rpx;
+    }
+    &-detail {
+        width: 385rpx;
+        height: 100rpx;
+        margin: 32rpx 0 30rpx 0;
+    }
+    &-title {
+        display:flex;
+        height: 34rpx;
+        font-size: 34rpx;
+        line-height: 34rpx;
+        color: #333333;
+        font-weight: bold;
+        &-img {
+            width: 33rpx;
+            height: 33rpx;
+            margin-left:18rpx;
+        }
+    }
+    &-tag {
+        display:flex;
+        height:40rpx;
+        margin-top:20rpx;
+        &-each {
+            margin-right:10rpx;
+            padding-left: 16rpx;
+            padding-right: 16rpx;
+            height:40rpx;
+            font-size: 18rpx;
+            line-height: 40rpx;
+            color: white;
+            background: #ffa312;
+            border-radius: 6rpx;
+        }
+    }
+    &-probability {
+        padding-top: 35rpx;
+        color: #a9a9a9;
+        font-size: 24rpx;
+        &-score {
+            margin-top: rpx;
+            color: #1fbe79;
+            font-size: 44rpx;
+            font-weight: bold;
+        }
+    }
+}
+// 学校介绍
+.title {
+    display: flex;
+    height: 34rpx;
+    margin-top:60rpx;
+    margin-left: 30rpx;
+    margin-bottom:26rpx;
+    font-weight:bold;
+    &-border {
+        width: 6rpx;
+        height: 32rpx;
+        margin-top: 1rpx;
+        background: #1fbe79;
+    }
+    &-text {
+        margin-left:19rpx;
+        font-size:34rpx;
+        line-height: 34rpx;
+    }
+}
+</style>

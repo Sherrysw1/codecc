@@ -1,0 +1,292 @@
+<template>
+    <view>
+        <view class="header">
+            <view class="header-title">金融工程</view>
+            <view class="header-discription">教育部评级：<text style="color: #f65252">A+</text></view>
+            <view class="header-detail">
+                <image class="header-detail-right" src="../../resource/img/major_new_right.png"/>
+                <view class="header-detail-name">北京大学</view>
+                <image class="header-detail-img" src="../../resource/img/school_icon.png"/>
+            </view>
+        </view>
+        <view class="background">
+            <view class="info">
+                <titleNew> 
+                    <view slot="left">专业信息</view>
+                    <view slot="right">北京·理科</view>
+                </titleNew>
+                <selectFigure></selectFigure>
+                <view class='container'>
+                    <ecCanvas id='mychart-dom-pie' :canvasId.sync='canvasId' :ec.sync='ec'></ecCanvas>
+                </view>
+            </view>
+            <view class="info">
+                <titleNew> 
+                    <view slot="left">专业信息</view>
+                    <view slot="right">北京·理科</view>
+                </titleNew>
+                <selectTable></selectTable>
+                <view class="table">
+                    <majorTableHeader>
+                        <view slot="first">年份</view>
+                        <view slot="second">省控线</view>
+                        <view slot="third">最低分</view>
+                        <view slot="forth">平均分</view>
+                        <view slot="fifth">招生数</view>
+                    </majorTableHeader>
+                    <repeat for="{{list}}" key="index" index="index" item="item">
+                        <majorTableLine>
+                            <view slot="first" style="{{ index % 2 === 0 ? 'background: white' : 'background: #f0f6ff'}}">{{item}}</view>
+                            <view slot="second" style="{{ index % 2 === 0 ? 'background: white' : 'background: #f0f6ff'}}">{{item}}</view>
+                            <view slot="third" style="{{ index % 2 === 0 ? 'background: white' : 'background: #f0f6ff'}}">{{item}}</view>
+                            <view slot="forth" style="{{ index % 2 === 0 ? 'background: white' : 'background: #f0f6ff'}}">{{item}}</view>
+                            <view slot="fifth" style="{{ index % 2 === 0 ? 'background: white' : 'background: #f0f6ff'}}">{{item}}</view>
+                        </majorTableLine>
+                    </repeat>
+                </view>
+            </view>
+            <view class="info">
+                <titleNew> <view slot="left">专业信息</view></titleNew>
+                <hiddenMajor>
+                    <view>内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容</view>
+                </hiddenMajor>
+            </view>
+            <view class="info">
+                <titleNew> <view slot="left">主修课程</view></titleNew>
+                <hiddenLesson>
+                    <view>内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容</view>
+                </hiddenLesson>
+            </view>
+        </view>
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy';
+import common from '../../mixins/common';
+import titleNew from '../../components/common/titleNew';
+import hiddenNew from '../../components/common/hiddenNew';
+import majorTableHeader from '../../components/major/majorTableHeader';
+import majorTableLine from '../../components/major/majorTableLine';
+import levelSelect from '../../components/major/majorIndividual/levelSelect';
+import EcCanvas from '../../ec-canvas/ec-canvas';
+import * as echarts from '../../ec-canvas/echarts';
+export default class majorIndividual extends wepy.page {
+    config = {
+        navigationBarTitleText: '',
+        'usingComponents': {
+            'i-spin': '../../iview/spin/index'
+        }
+    }
+    components = {
+        titleNew: titleNew,
+        hiddenMajor: hiddenNew,
+        hiddenLesson: hiddenNew,
+        majorTableHeader: majorTableHeader,
+        majorTableLine: majorTableLine,
+        selectTable: levelSelect,
+        selectFigure: levelSelect,
+        ecCanvas: EcCanvas
+    }
+    mixins = [
+        common
+    ]
+    data = {
+        list: [1, 2, 3, 4, 5],
+        canvasId: 'mychart-pie',
+        ec: {
+            onInit: this.initChart
+        }
+    }
+    methods = {
+    }
+    async onLoad() {
+    }
+    initChart(canvas, width, height) {
+        const chart = echarts.init(canvas, null, {
+            width: width,
+            height: height
+        });
+        canvas.setChart(chart);
+        var option = {
+            title: {
+                show: false
+            },
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'cross',
+                    label: {
+                        backgroundColor: '#6a7985'
+                    }
+                }
+            },
+            legend: {
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true
+            },
+            xAxis: [
+                {
+                    type: 'category',
+                    boundaryGap: true,
+                    data: ['2014', '2015', '2016', '2017', '2018'],
+                    axisLine: {
+                        show: false
+                    },
+                    axisTick: {
+                        show: false
+                    }
+                }
+            ],
+            yAxis: [
+                {
+                    type: 'value',
+                    min: function(value) {
+                        return value.min - 100;
+                    },
+                    show: false
+                }
+            ],
+            series: [
+                {
+                    name: '省控线分数',
+                    type: 'line',
+                    stack: '总',
+                    label: {
+                        show: true,
+                        position: 'bottom'
+                    },
+                    itemStyle: {
+                        color: '#1bbc81'
+                    },
+                    lineStyle: {
+                        color: '#1bbc81'
+                    },
+                    areaStyle: {
+                        color: '#ecf9f3'
+                    },
+                    data: [580, 592, 588, 596, 593]
+                },
+                {
+                    name: '录取最低分',
+                    type: 'line',
+                    stack: '其他',
+                    label: {
+                        show: true,
+                        position: 'top'
+                    },
+                    itemStyle: {
+                        color: '#3384fe'
+                    },
+                    lineStyle: {
+                        color: '#3384fe'
+                    },
+                    areaStyle: {
+                        color: 'rgb(233, 242, 255)'
+                    },
+                    data: [674, 680, 684, 698, 685]
+                },
+                {
+                    name: '差值',
+                    type: 'line',
+                    stack: '1',
+                    symbol: 'triangle',
+                    symbolOffect: [20, 20],
+                    label: {
+                        show: true,
+                        position: 'right'
+                    },
+                    itemStyle: {
+                        color: '#f65252'
+                    },
+                    lineStyle: {
+                        color: 'rgba(233, 242, 255, 0)'
+                    },
+                    areaStyle: {
+                        color: 'rgba(233, 242, 255, 0)'
+                    },
+                    data: [674, 674, 674, 674, 674]
+                }
+            ]
+        };
+        chart.setOption(option);
+        return chart;
+    }
+}
+</script>
+<style lang="less" scoped>
+// header 为头部标题栏的UI
+.header {
+    position: relative;
+    width: 100%;
+    height: 161rpx;
+    &-title {
+        position: absolute;
+        top: 38rpx;
+        left: 30rpx;
+        font-size: 40rpx;
+        font-weight: bold;
+        font-stretch: normal;
+        color: #333333;
+    }
+    &-discription {
+        position: absolute;
+        top: 95rpx;
+        left: 30rpx;
+        font-size: 26rpx;
+	    font-weight: normal;
+        font-stretch: normal;
+        color: #a9a9a9;
+    }
+    &-detail {
+        position: absolute;
+        top: 51rpx;
+        display: flex;
+        flex-direction: row-reverse;
+        height: 60rpx;
+        right: 30rpx;
+        &-right {
+            width: 11rpx;
+            height: 20rpx;
+            margin-top: 20rpx;
+        }
+        &-name {
+            line-height: 60rpx;
+            margin-right: 10rpx;
+            margin-left: 10rpx;
+            font-size: 30rpx;
+	        font-weight: normal;
+            font-stretch: normal;
+            color: #333333;
+        }
+        &-img {
+            width: 60rpx;
+            height: 60rpx;
+        }
+    }
+}
+.background {
+    width: 100%;
+    padding-top: 20rpx;
+    padding-bottom: 1rpx;
+    background: #f5f4fa;
+}
+// 专业信息
+.info {
+    width: 100%;
+    height: auto;
+    margin-bottom: 20rpx;
+    padding-bottom: 30rpx;
+    padding-top: 1rpx;
+    background: white;
+}
+.table {
+    margin: auto;
+    width: 690rpx;
+    border: 1rpx solid #e8f3ff;
+}
+</style>

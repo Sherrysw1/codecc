@@ -1,0 +1,203 @@
+<style lang="less">
+    .main-view{
+    height: 100%;
+    width: 100%;
+    margin: 0rpx 30rpx;
+    }
+    .major-cell{
+        height: 207rpx;
+        width: 680rpx;
+        min-width: 0rpx;
+        display: flex;
+        flex-direction: column;
+        border-bottom: 1rpx solid #eeeeee;
+    }
+    .majorName-line{
+        padding-top: 34rpx;
+        height: 32rpx;
+        font-family: "PingFangSC-Regular";
+        font-size: 34rpx;
+        font-weight: normal;
+        line-height: 24rpx;
+        color: #333333;
+    }
+    .majorInfo-line{
+        height: 79rpx;
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        flex-direction: row;
+    }
+    .majorInfo-line>image{
+        padding: 19rpx 14rpx 20rpx 0rpx;
+    }
+    .linkButton{
+        position:absolute;
+        right:50rpx;
+        padding :15rpx 0rpx 20rpx 0rpx;
+        margin-left: 250rpx;
+        color: #a1a1a1;
+    }
+    .majorInfoName{
+        padding: 25rpx 30rpx 25rpx 0rpx;
+        height: 25rpx;
+	    font-family: "PingFangSC-Regular";
+        font-size: 26rpx;
+        font-weight: normal;
+	    line-height: 24rpx;
+	    color: #a1a1a1;
+    }
+    .tag-line{
+        height: 68rpx;
+        margin-bottom: 5rpx;
+        display: flex;
+        flex-wrap: wrap;
+        flex-direction: row;
+    }
+    .infoTag{
+        height: 40rpx;
+        width: 98rpx;
+        margin: 0rpx 17rpx 0rpx 0rpx;
+        box-sizing: border-box; 
+        padding: 9rpx 17rpx;
+	    background-color: #f5f5f5;
+        border-radius: 6rpx;
+	    font-family: "PingFangSC-Regular";
+        font-size: 22rpx;
+        font-weight: normal;
+        text-align: center;
+	    line-height: 24rpx;
+	    color: #a9a9a9;
+    }
+</style>
+
+<template>
+    <view>
+        <i-spin   wx:if="{{isloaded}}" size="large" fix></i-spin>
+        <view class="main-view" style="width:100%" wx:else>
+            <view wx:for="{{majorList}}" wx:for-index="index" wx:for-item="item">
+                <view class="major-cell" @tap="goTomajorDetail({{item.majorItemSampleVo.mid}})">
+                    <!-- 专业名称行 -->
+                    <view class="majorName-line">{{item.majorItemSampleVo.majorName}}</view>
+                    <!-- 基本信息行 -->
+                    <view class="majorInfo-line">
+                        <image src="../../resource/img/major_openSchool.png" alt="" style="width: 32rpx; height: 33rpx;"/>
+                        <view class="majorInfoName">{{item.majorItemSampleVo.schoolNumHasMajor}}所开设院校</view>
+                        <image src="../../resource/img/major_doctorHat.png" alt="" style="width: 42rpx; height: 33rpx;"/>
+                        <view class="majorInfoName">{{item.majorItemSampleVo.majorYear}}制</view>
+                        <view class="linkButton"><image src="../../resource/img/fanhui.png" style="width: 19rpx; height: 35rpx;"/></view>
+                    </view>
+                    <!-- 标签行 -->
+                    <view class="tag-line">
+                            <!-- <view wx:for="{{item.tagList}}" wx:for-index="index" wx:for-item="subItem">
+                                <view class="infoTag">{{subItem}}</view>
+                            </view> -->
+                            <view class="infoTag">{{test1}}</view>
+                            <view class="infoTag">{{test2}}</view>
+                    </view>
+                </view>
+            </view>
+        </view>
+    </view>
+</template>
+    
+<script>
+import wepy from 'wepy';
+import common from '../../mixins/common';
+export default class Index extends wepy.page {
+    config = {
+        navigationBarTitleText: '',
+        onReachBottomDistance: 100,
+        usingComponents: {
+            'i-cell-group': '../../iview/cell-group/index',
+            'i-cell': '../../iview/cell/index',
+            'i-spin': '../../iview/spin/index'
+        }
+    }
+    components = {
+    }
+    mixins = [
+        common
+    ]
+    data = {
+        isloaded: true,
+        testIndex: '',
+        currentFirstClass: '',
+        currentMajorLevel: '',
+        currentPage: 1,
+        pageSize: 10,
+        pageAll: 0,
+        test1: '好就业',
+        test2: '有前景',
+        majorList: []
+    }
+    computed = {}
+    methods = {
+         /** brief:点击跳转进入专业详情
+         *  anthor：dragon
+         *  detail：跳转的参数是专业的mid
+         */
+        goTomajorDetail (mid) {
+            wepy.navigateTo({
+                url: `/pages/major/majorDetail?mid=${mid}`
+            });
+        }
+    }
+    events = {}
+    // 页面装载的时候获得借口的参数，以及设置页面标题
+    async onLoad (param) {
+        let self = this;
+        self.isloaded = true;
+        self.majorList = [];
+        // 获取cookie
+        self.globalData = this.$parent.globalData;
+        console.log(param.firstClass);
+        self.currentFirstClass = param.firstClass;
+        self.currentMajorLevel = param.majorLevel;
+        self.currentPage = 1;
+        await this.requestMajorList(self.currentFirstClass, self.currentMajorLevel, self.currentPage);
+        wepy.setNavigationBarTitle({
+            title: self.currentFirstClass
+        });
+        self.isloaded = false;
+        self.$apply();
+    }
+    async onReachBottom () {
+        console.log('begin push');
+        let self = this;
+        self.currentPage = self.currentPage + 1;
+        console.log(self.currentPage);
+        this.requestMajorList(self.currentFirstClass, self.currentMajorLevel, self.currentPage);
+        self.$apply();
+    }
+    async requestMajorList (currentFirstClass, currentMajorLevel, currentPage) {
+        let self = this;
+        let resMajor = await this.request({
+            url: this.requestUrl + '/gkzywx/majorInfoBake/getMajorListBySecondClass.do',
+            method: 'POST',
+            header: {
+                'content-type': 'application/json',
+                'cookie': 'JSESSIONID=' + this.globalData.sessionId
+            },
+            data: {
+                // request时需要提交的字段，包括load页面的时候获得的firstClass和majorLevel
+                'majorLevel': self.currentMajorLevel,
+                'secondClassName': self.currentFirstClass,
+                // 当前页面是第几个
+                'pageNum': self.currentPage,
+                // 每次request的list长度
+                'pageSize': 10
+            }
+        }, false).catch(err => {
+            console.log(err);
+        });
+        console.log(resMajor);
+        if (resMajor.status === 0) {
+            resMajor.data.majorList.forEach(item => {
+                self.majorList.push(item);
+            });
+            self.$apply();
+        }
+    }
+}
+</script>

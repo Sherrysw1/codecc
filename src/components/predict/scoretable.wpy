@@ -1,0 +1,157 @@
+<template>
+    <view class="table">
+       <view class="title">
+           <view class="title-left">
+               我的分数
+               <view class="title-left-score">
+                   {{studentScore}}
+               </view>
+           </view>
+           <view class="title-mid">
+               2019预估分数
+               <view class="title-mid-score">
+                   {{predictScore}}
+               </view>
+           </view>
+           <view class="title-right">
+               往年录取分数
+               <view class="title-right-year">
+                   <view>2018</view><view>2017</view><view>2016</view><view>2015</view>
+               </view>
+               <view class="title-right-score">
+                   <view>{{score2018}}</view><view>{{score2017}}</view><view>{{score2016}}</view><view>{{score2015}}</view>
+               </view>
+           </view>
+       </view>
+    </view>  
+</template>
+<script>
+import wepy from 'wepy';
+import common from '../../mixins/common';
+export default class scoreTable extends wepy.component {
+    data = {
+        schoolName: '',
+        studentProvince: '',
+        studentType: '',
+        predictScore: '',
+        studentScore: '',
+        score2018: '--',
+        score2017: '--',
+        score2016: '--',
+        score2015: '--'
+    }
+    props = {
+    }
+    mixins = [
+        common
+    ]
+    events = {
+    }
+    methods = {
+    }
+    async onLoad () {
+        let self = this;
+        this.getUser();
+        console.log('adfgggg', self.globalData, self.userInfoFromServer);
+        await this.requestPredictCollege();
+    }
+    async getUser () {
+        let self = this;
+        console.log('global', this.$parent.$parent.globalData);
+        self.schoolName = this.$parent.schoolName;
+        self.studentProvince = this.$parent.studentProvince;
+        self.studentType = this.$parent.studentType;
+        self.predictScore = this.$parent.predictScore;
+        self.studentScore = this.$parent.$parent.globalData.userInfoFromServer.studentScore;
+        self.$apply();
+    }
+    async requestPredictCollege () {
+        let self = this;
+        const resScore = await this.request({
+            url: this.requestUrl + '/gkzywx/collegePredict/getCollegeEnrollListByStuInfo.do',
+            method: 'POST',
+            header: {
+                'content-type': 'application/json',
+                'cookie': 'JSESSIONID=' + this.$parent.$parent.globalData.sessionId
+            },
+            data: {
+                'schoolName': self.schoolName,
+                'studentProvince': self.studentProvince,
+                'studentType': self.studentType
+            }
+        }, false).catch(err => {
+            console.log(err);
+        });
+        resScore.data.forEach(element => {
+            element.year === 2018 ? element.minScore !== -1 ? self.score2018 = element.minScore : self.score2018 = '--' : console.log('');
+            element.year === 2017 ? element.minScore !== -1 ? self.score2017 = element.minScore : self.score2017 = '--' : console.log('');
+            element.year === 2016 ? element.minScore !== -1 ? self.score2016 = element.minScore : self.score2016 = '--' : console.log('');
+            element.year === 2015 ? element.minScore !== -1 ? self.score2015 = element.minScore : self.score2015 = '--' : console.log('');
+        });
+        self.$apply();
+    }
+}
+</script>
+<style lang="less" scoped>
+.table {
+    margin: 30rpx auto 0;
+    width: 687rpx;
+    height: 156rpx;
+    background: #fafafa;
+}
+.title {
+    display: flex;
+    box-sizing: border-box;
+    margin-top:33rpx;
+    padding-top:27rpx;
+    width: 100%;
+    font-size: 25rpx;
+    color: 333333;
+    &-left {
+        width:120rpx;
+        margin-left: 28rpx;
+        &-score {
+            margin-top: 20rpx;
+            font-size: 36rpx;
+            color: #1fbe79;
+            font-weight: bold;
+        }
+    }
+    &-mid {
+    width:175rpx;
+        margin-left: 37rpx;
+        &-score {
+            margin-top: 20rpx;
+            font-size: 36rpx;
+            color: #1fbe79;
+            font-weight: bold;
+        }
+    }
+    &-right {
+        margin-left:50rpx;
+        &-year {
+            display: flex;
+            margin-top: 20rpx;
+            font-size: 22rpx;
+            color: #a9a9a9;
+        }
+        &-year>view{
+            width:55rpx;
+            text-align: center;
+            margin-right: 20rpx;
+        }
+        &-score {
+            display: flex;
+            margin-top: 10rpx;
+            font-size: 25rpx;
+            color: #1fbe79;
+        }
+        &-score>view{
+            width:55rpx;
+            text-align: center;
+            margin-right: 20rpx;
+        }
+    }
+}
+
+</style>

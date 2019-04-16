@@ -1,0 +1,339 @@
+<template>
+    <view style="border-top:1rpx solid #e0e0e0">
+        <view class="search-line">
+        <image class="search-line-img" src="../resource/img/collegeMain_search_back.png"/>
+        <input class="search-line-input" placeholder="理想中的大学" value="{{searchValue}}" confirm-type="search" bindinput="collegeInput"/>
+        </view>
+        <view class="college-line" wx:for="{{collegeShowList}}" wx:for-item="item" >
+            <view @tap="collegeSelect({{item}})">{{item}}</view>
+        </view>
+        <view class="search-title">
+            <view class="search-title-text">
+                搜索历史
+            </view>
+            <image class="search-title-icon" src="../resource/img/collegeSearch_delete.png" @tap="deleteStorge"/>
+        </view>
+        <view class="college-storage-box">
+        <view class="college-storage" wx:for="{{searchRecord}}" wx:for-item="item">
+            <view @tap="collegeStorage({{item}})">{{item}}</view>
+        </view>
+        </view>
+        <!-- <view class="tag-box">
+            <view  wx:for="{{tagList}}" wx:for-item="item">
+            <view class="{{tagId === item.tagId ? 'tag-chosen' : 'tag-else'}}" @tap="tagClick({{item}})">{{item.tagname}}</view>          
+            </view>       
+        </view> -->
+        <i-toast id="toast" /> 
+    </view>
+</template>
+<script>
+const { $Toast } = require('../iview/base/index');
+import wepy from 'wepy';
+import common from '../mixins/common';
+export default class testCollege extends wepy.page {
+    config = {
+        navigationBarTitleText: '测一测理想中的大学',
+        usingComponents: {
+            'i-button': '../iview/button/index',
+            'i-toast': '../iview/toast/index'
+        }
+    }
+    components = {}
+    mixins = [
+        common
+    ]
+    data = {
+        avatarUrl: '',
+        searchValue: '',
+        requestUrl: '',
+        globalData: '',
+        collegeNameList: [],
+        collegeShowList: [],
+        collegeId: null,
+        searchRecord: [],
+        studentType: '',
+        studentProvince: '',
+        studentScore: '',
+        schoolName: ''
+    }
+    computed = {}
+    methods = {
+        collegeInput (e) {
+            let self = this;
+            self.collegeShowList = [];
+            if (e.detail.value.length === 0 || e.detail.value.length === 1) {
+            }
+            else {
+                self.collegeNameList.forEach(function(college) {
+                    if (college.indexOf(e.detail.value) > -1) {
+                        self.collegeShowList.push(college);
+                    }
+                });
+                self.$apply();
+            }
+        },
+        async collegeSelect (collegeName) {
+            let self = this;
+            let searchRecord = self.searchRecord;
+            const resPredict = await this.request({
+                url: self.requestUrl + '/gkzywx/collegePredict/getCollegePredictListByPrefer.do',
+                method: 'POST',
+                header: {
+                    'content-type': 'application/json',
+                    'cookie': 'JSESSIONID=' + this.$parent.globalData.sessionId
+                },
+                data: {
+                    schoolName: collegeName,
+                    studentProvince: self.studentProvince,
+                    studentScore: self.studentScore,
+                    studentType: self.studentType
+                }
+            }, false).catch(err => {
+                console.log(err);
+            });
+            if (resPredict.status === 0) {
+                wepy.navigateTo({
+                    url: `/pages/predict/predictOneCollege?schoolId=${resPredict.data[0].id}&schoolName=${collegeName}&probability=${resPredict.data[0].probability}&predictScore=${resPredict.data[0].predictScore}`
+                });
+            }
+            else {
+                $Toast({
+                    content: resPredict.msg,
+                    type: 'error'
+                });
+            }
+            if (searchRecord.length < 8) {
+                searchRecord.unshift(collegeName);
+            }
+            else {
+                searchRecord.pop();
+                searchRecord.unshift(collegeName);
+            }
+            wx.setStorageSync('searchRecord', searchRecord);
+        },
+        async collegeStorage (collegeName) {
+            let self = this;
+            let searchRecord = self.searchRecord;
+            searchRecord.splice(searchRecord.indexOf(collegeName), 1);
+            const resPredict = await this.request({
+                url: self.requestUrl + '/gkzywx/collegePredict/getCollegePredictListByPrefer.do',
+                method: 'POST',
+                header: {
+                    'content-type': 'application/json',
+                    'cookie': 'JSESSIONID=' + this.$parent.globalData.sessionId
+                },
+                data: {
+                    schoolName: collegeName,
+                    studentProvince: self.studentProvince,
+                    studentScore: self.studentScore,
+                    studentType: self.studentType
+                }
+            }, false).catch(err => {
+                console.log(err);
+            });
+            if (resPredict.status === 0) {
+                wepy.navigateTo({
+                    url: `/pages/predict/predictOneCollege?schoolId=${resPredict.data[0].id}&schoolName=${collegeName}&probability=${resPredict.data[0].probability}&predictScore=${resPredict.data[0].predictScore}`
+                });
+            }
+            else {
+                $Toast({
+                    content: resPredict.msg,
+                    type: 'error'
+                });
+            }
+            if (searchRecord.length < 8) {
+                searchRecord.unshift(collegeName);
+            }
+            else {
+                searchRecord.pop();
+                searchRecord.unshift(collegeName);
+            }
+            wx.setStorageSync('searchRecord', searchRecord);
+        },
+        deleteStorge (e) {
+            var self = this;
+            self.searchRecord = [];
+            self.$apply();
+            wx.setStorageSync('searchRecord', self.searchRecord);
+        }
+    }
+    events = {}
+    async onLoad() {
+        let self = this;
+        self.requestUrl = this.$parent.globalData.requestUrl;
+        self.globalData = this.$parent.globalData;
+        self.studentType = self.globalData.userInfoFromServer.studentType;
+        self.studentScore = self.globalData.userInfoFromServer.studentScore;
+        self.studentProvince = self.globalData.userInfoFromServer.studentProvince;
+        self.searchRecord = wx.getStorageSync('searchRecord') || [];
+        this.requestSchool();
+        self.$apply();
+    }
+    async onShow () {
+        let self = this;
+        self.collegeShowList = [];
+        self.searchValue = '';
+        self.$apply();
+    }
+    async requestSchool () {
+        let self = this;
+        const resSchool = await this.request({
+            url: self.requestUrl + '/gkzywx/collegeInfo/getSchoolNameList.do',
+            method: 'POST',
+            header: {
+                'content-type': 'application/json',
+                'cookie': 'JSESSIONID=' + this.$parent.globalData.sessionId
+            },
+            data: {
+            }
+        }, false).catch(err => {
+            console.log(err);
+        });
+        if (resSchool.status === 0) {
+            self.collegeNameList = resSchool.data;
+        }
+        else {
+            $Toast({
+                content: resSchool.msg,
+                type: 'error'
+            });
+        }
+    }
+}
+</script>
+<style lang="less" scoped> 
+    //搜索框
+    .search-line {
+        position: relative;
+        width:691rpx;
+        height:67rpx;
+        margin:20rpx auto 0;
+    }
+    .search-line-img {
+        width:100%;
+        height:100%;
+    }
+    .search-line-input {
+        top:3.5rpx;
+        width: 600rpx;
+        height: 60rpx;
+        position: absolute;
+        left:100rpx;
+        font-size:24rpx;
+        line-height: 60rpx;
+        color: #bababa;
+        letter-spacing: 5rpx;
+    }
+    // 搜索题目
+    .search-title {
+    width: 100%;
+    height: 32rpx;
+    margin-top: 40rpx;
+    display:flex;
+    }
+    .search-title-text {
+    font-size:28rpx;
+    color:#666666;
+    margin-left:30rpx;
+    }
+    .search-title-icon {
+    width:28rpx;
+    height:32rpx;
+    margin-left:548rpx;
+    }
+    //匹配结果
+    .college-line {
+    width:100%;
+    height:94rpx;
+    border-bottom:1rpx solid #f0eeee;
+    color:#666666;
+    font-size:32rpx;
+    line-height: 94rpx;
+    padding-left:60rpx;
+    }
+    // 缓存
+    .college-storage-box {
+    width:690rpx;
+    padding-left:30rpx;
+    padding-right:46rpx;
+    margin-top:35rpx;
+    display:flex;
+    flex-wrap: wrap;
+    }
+    .college-storage {
+    background-color: #f8f8f8;
+    height:62rpx;
+    border-radius: 6rpx;
+    text-align: center;
+    color:#666666;
+    font-size:25rpx;
+    margin-right:20rpx;
+    padding-left:30rpx;
+    padding-right:30rpx;
+    line-height:62rpx;
+    margin-bottom:30rpx;
+    }
+//标签区域
+.tag-box {
+    width:690rpx;
+    max-height:270rpx;
+    margin:20rpx auto 0;
+    display:flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    overflow: hidden;
+}
+//标签区域
+.tag-box {
+    width:714rpx;
+    max-height:270rpx;
+    margin:20rpx auto 0;
+    display:flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    overflow: hidden;
+}
+.tag-all {
+    width:142rpx;
+    height:70rpx;
+    background-color: #fdf2db;
+    border-radius:20rpx;
+    font-size:32rpx;
+    color:rgb(155, 155, 155);
+    line-height: 70rpx;
+    text-align: center;
+    margin-left:16rpx;
+    margin-right:15rpx;
+    margin-top:10rpx;
+    margin-bottom:10rpx;
+}
+.tag-else {
+    width:116rpx;
+    height:57rpx;
+    background-color: #eefbf5;
+    color: #1fbe79;
+    border-radius:6rpx;
+    font-size:27rpx;
+    line-height:57rpx;
+    text-align:center;
+    margin-left:14rpx;
+    margin-right:14rpx;
+    margin-top:9rpx;
+    margin-bottom:9rpx;
+}
+.tag-chosen {
+    width:116rpx;
+    height:57rpx;
+    background-color: #1fbe79;
+    color: white;
+    border-radius:6rpx;
+    font-size:27rpx;
+    line-height:57rpx;
+    text-align:center;
+    margin-left:14rpx;
+    margin-right:14rpx;
+    margin-top:9rpx;
+    margin-bottom:9rpx;
+}
+</style>

@@ -1,0 +1,91 @@
+<template>
+    <view class="box">
+        <view class="detail">
+            <view class="title">
+                <slot name="title1"></slot>
+            </view>
+            <view class="name">
+                <slot name="name1"></slot>
+            </view>
+        </view>
+        <view class="divide"></view>
+        <view class="detail" style="padding-left: 30rpx">
+            <view class="title">
+                <slot name="title2"></slot>
+            </view>
+            <view class="name">
+                <slot name="name2"></slot>
+            </view>
+        </view>
+        <view class="divide"></view>
+        <view class="detail" style="padding-left: 30rpx">
+            <view class="title">
+                <slot name="title3"></slot>
+            </view>
+            <view class="name">
+                <slot name="name3"></slot>
+            </view>
+        </view>
+        <view class="divide"></view>
+        <view class="detail" style="padding-left: 30rpx">
+            <view class="title">
+                <slot name="title4"></slot>
+            </view>
+            <view class="name">
+                <slot name="name4"></slot>
+            </view>
+        </view>
+    </view>
+</template>
+<script>
+import wepy from 'wepy';
+import common from '../../mixins/common';
+export default class majorIntro extends wepy.component {
+    data = {
+        changeTab: 'tab1'
+    }
+    props = {
+    }
+    mixins = [
+        common
+    ]
+    options = {
+    }
+    methods = {
+    }
+    events = {
+    }
+    async onLoad () {
+    }
+}
+</script>
+<style lang="less" scoped>
+.box {
+    width: 690rpx;
+    margin: auto;
+    display: flex;
+}
+.detail {
+    position: relative;
+    box-sizing: border-box;
+    width: 170rpx;
+    height:70rpx;
+}
+.divide {
+    width: 2rpx;
+    height: 70rpx;
+    background: #cccccc;
+}
+.title {
+    position: absolute;
+    top: 0;
+    font-size: 25rpx;
+    color: #a9a9a9;
+}
+.name {
+    position: absolute;
+    font-size: 28rpx;
+    color: #333333;
+    bottom: 0;
+}
+</style>
