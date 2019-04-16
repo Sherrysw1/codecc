@@ -22,7 +22,7 @@ export default class buttonHidden extends wepy.component {
     ]
     methods = {
         async moreInfo () {
-            this.introSignal = !this.introSignal;
+            this.introSignal = !this.introSignal;  
         }
     }
     async onLoad () {
